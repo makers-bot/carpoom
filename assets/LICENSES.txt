@@ -1,0 +1,120 @@
+카품(Car Poom) 모바일 앱 MVP에 포함된 외부 자료의 고지문
+
+================================================================
+1. 3D 아이콘 — Microsoft Fluent Emoji 3D (assets/icons/<이름>.webp, 모바일 앱)
+   원본: https://github.com/microsoft/fluentui-emoji (명암은 살리고 블루 톤으로 다시 칠해 144px WebP로 축소)
+   받는 방법: node tools/fetch-fluent-icons.js
+   Pleos 앱 레일의 흰 글리프(assets/icons/w-*.webp)는 팀 도안을 tools/render-icons.js로 렌더링한 자체 제작
+================================================================
+
+MIT License
+
+Copyright (c) Microsoft Corporation.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================
+2. 서체 — Pretendard 1.3.9 (assets/fonts.css 안의 @font-face 'CarpoomSans')
+   원본: https://github.com/orioncactus/pretendard
+   변경: 카품에 쓰는 글자와 KS X 1001 한글 2,350자만 남긴 수정본.
+         수정본이므로 서체 내부 이름을 'CarpoomSans'로 바꿨고,
+         저작권(name ID 0)과 라이선스(name ID 13, 14) 표기는 그대로 두었다.
+================================================================
+
+Copyright (c) 2023 Kil Hyung-jin (https://github.com/orioncactus/pretendard)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+The license is available with a FAQ at: https://openfontlicense.org
+
+================================================================
+3. 3D 렌더링 — three.js r128
+   원본: https://github.com/mrdoob/three.js (cdnjs 배포본, 단일 파일 빌드에는 그대로 내장)
+================================================================
+
+The MIT License
+
+Copyright © 2010-2021 three.js authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+================================================================
+4. 현대자동차 전용서체 Hyundai Sans
+================================================================
+
+포함하지 않았다. 공개 배포 라이선스가 없기 때문이다.
+2026-11-12부터 화면 서체는 Pleos Connect 시스템 서체 Asta Sans(아래 5번)로 바꿨다.
+
+================================================================
+5. 서체 — Asta Sans (Pleos Connect 시스템 서체)
+   제공: Google Fonts (https://fonts.google.com/specimen/Asta+Sans)
+   방식: 파일을 넣지 않고 Google Fonts에서 불러온다. 인터넷이 없으면 2번 Pretendard로 대체된다.
+   라이선스: SIL Open Font License 1.1
+================================================================
+
+================================================================
+6. 지도 렌더링 — MapLibre GL JS 5.6.0 (assets/vendor/maplibre-gl.js, maplibre-gl.css)
+   수정: 도로를 따라 붙는 이름에서 한글만 세로로 세우는 동작을 한 줄 끔(파일 맨 위 주석)
+   원본: https://github.com/maplibre/maplibre-gl-js
+   라이선스: BSD-3-Clause (Copyright (c) 2023, MapLibre contributors)
+================================================================
+
+================================================================
+7. 지도 타일·데이터 — OpenFreeMap / OpenMapTiles / OpenStreetMap
+   타일: https://openfreemap.org (키 없이 사용, 스타일 positron·dark)
+   이용 조건(2026-11-13 openfreemap.org 확인): 상업적 사용 가능, 요청 수 제한 없음, API 키 없음, 출처 표기 필수.
+   영상이나 인쇄물에는 OpenMapTiles와 "Data from OpenStreetMap"을 표기해야 한다 → 지도 오른쪽 아래 표기가 영상에도 그대로 나온다.
+   표기: 지도 오른쪽 아래에 "OpenFreeMap © OpenMapTiles Data from OpenStreetMap"을 항상 보여 준다.
+   지도 데이터: © OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright)
+   ODbL: 출처 표기와 라이선스 안내를 하면 복사, 배포, 변형 가능. 데이터베이스 자체를 고쳐 배포하면 같은 라이선스로 공개해야 한다
+   (우리는 지도 그림을 보여 주고 경로 좌표 일부만 쓰며, 데이터베이스를 고쳐 배포하지 않는다).
+================================================================
+
+================================================================
+8. 경로 — OSRM 공개 데모 서버 (router.project-osrm.org)
+   시나리오 경로 8개는 미리 받아 carpoom-geo.js(BAKED)에 넣었고, 그 밖의 위치만 실행 중에 요청한다.
+   공개 데모 서버는 체험용이다. 실제 서비스에서는 Pleos NaviHelper SDK의 경로를 쓴다.
+   이용 조건(2026-11-13 OSRM 위키 확인): "합리적인 비상업적 용도"로 제한, 초당 1회 이하 요청, 가용성 보장 없음.
+   공모전 시연은 비상업적 용도이고 시나리오 경로는 미리 받아 두어 요청이 거의 없다. 상용 서비스에서는 쓰면 안 된다(자체 OSRM 서버나 NaviHelper로 교체).
+   경로 데이터: © OpenStreetMap contributors, ODbL 1.0
+================================================================
+
+================================================================
+9. 차량 이미지 — Pleos Connect 디자인 가이드 (assets/pleos/car-top.webp, car-34.webp)
+   출처: https://document.pleos.ai/img/Pleos_Connect_display_guide_215.fig
+         (Pleos Playground가 Pleos Connect 앱 개발자에게 제공하는 공식 디자인 자료)
+   차종: 아이오닉 6(가이드의 모든 차 렌더링이 이 차종). 앱의 차량 이름도 아이오닉 6로 맞춤
+   변경: 차량 부분만 잘라 WebP로 줄임. Pleos 앱의 위에서 본 좌석 화면과 로그인 화면에 사용
+   권리: 현대자동차그룹. 공모전 Pleos 앱 시연 목적으로만 사용
+================================================================

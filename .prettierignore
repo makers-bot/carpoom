@@ -1,0 +1,6 @@
+# 외부 라이브러리, 생성물, 데이터
+assets/
+dist/
+demo/
+test/shots/
+node_modules/

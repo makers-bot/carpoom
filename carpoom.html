@@ -1,0 +1,5310 @@
+<title>카품 Car Poom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asta+Sans:wght@300..800&display=swap" />
+<link rel="stylesheet" href="assets/fonts.css" />
+<link rel="stylesheet" href="assets/vendor/maplibre-gl.css" />
+<style>
+  /* 레이아웃: 세로 1열 모바일 앱(토스형 카드 + 3D 아이콘). 데스크톱에서는 가운데 폰 프레임으로 표시. */
+  :root {
+    /* 현대자동차 톤: 흰 바탕 + 포인트 Hyundai Blue #002C5F, Active Blue #0E72AF. 빨강 #D7000A는 취소, 오류에만 쓴다 */
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f4f6f9;
+    --surface-3: #e4e9f0;
+    --fg: #121a26;
+    --muted: #6b7684;
+    --line: #e6eaf0;
+    --accent: #002c5f;
+    --accent-2: #0e72af;
+    --accent-fg: #ffffff;
+    --accent-soft: #eaf1fa;
+    --accent-2-soft: #e6f2fb;
+    --ok: #0e72af;
+    --ok-soft: #e6f2fb;
+    --warn: #9a6200;
+    --warn-soft: #fff4de;
+    --bad: #d7000a;
+    --bad-soft: #fde8e8;
+    --heat: #2f8cff;
+    --cool: #3e98d6;
+    --mild: #0e72af;
+    --seat-hi: #f4f6f9;
+    --seat-lo: #c9d2de;
+    --seat-side-hi: #a9b5c6;
+    --seat-side-lo: #8995a9;
+    --seat-face: #22303f;
+    --stage: #e3ecf7;
+    --shadow: 0 0 0 1px rgba(0, 44, 95, 0.06), 0 8px 22px rgba(0, 44, 95, 0.07);
+    /* Pleos Connect 시스템 서체 Asta Sans(Google Fonts, OFL)를 모바일에도 써서 차량 화면과 글꼴을 맞춘다. 오프라인이면 내장 Pretendard */
+    --font-text: 'Asta Sans', 'CarpoomSans', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic',
+      system-ui, sans-serif;
+    --font-head: 'Asta Sans', 'CarpoomSans', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic',
+      system-ui, sans-serif;
+    --r: 24px;
+    --r-md: 18px;
+    --r-sm: 14px;
+    --tap: 52px;
+  }
+  /* 다크 = Pleos 차량 화면과 같은 블랙, 그레이 + 블루 포인트(모바일과 차량 화면의 색감을 맞춘다) */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --bg: #0b0d10;
+      --surface: #16191e;
+      --surface-2: #1e2228;
+      --surface-3: #2a2f37;
+      --fg: #f2f4f7;
+      --muted: #9aa3af;
+      --line: #262b33;
+      --accent: #3d9bea;
+      --accent-2: #6cb8f0;
+      --accent-fg: #06121f;
+      --accent-soft: #132638;
+      --accent-2-soft: #14283a;
+      --ok: #6cb8f0;
+      --ok-soft: #14283a;
+      --warn: #f2b44c;
+      --warn-soft: #33291a;
+      --bad: #ff6b6b;
+      --bad-soft: #3a1e20;
+      --seat-hi: #a4b0c2;
+      --seat-lo: #6f7c90;
+      --seat-side-hi: #5a6679;
+      --seat-side-lo: #455061;
+      --seat-face: #101820;
+      --stage: #15191f;
+      --shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 10px 28px rgba(0, 0, 0, 0.45);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme='dark'] {
+    --bg: #0b0d10;
+    --surface: #16191e;
+    --surface-2: #1e2228;
+    --surface-3: #2a2f37;
+    --fg: #f2f4f7;
+    --muted: #9aa3af;
+    --line: #262b33;
+    --accent: #3d9bea;
+    --accent-2: #6cb8f0;
+    --accent-fg: #06121f;
+    --accent-soft: #132638;
+    --accent-2-soft: #14283a;
+    --ok: #6cb8f0;
+    --ok-soft: #14283a;
+    --warn: #f2b44c;
+    --warn-soft: #33291a;
+    --bad: #ff6b6b;
+    --bad-soft: #3a1e20;
+    --seat-hi: #a4b0c2;
+    --seat-lo: #6f7c90;
+    --seat-side-hi: #5a6679;
+    --seat-side-lo: #455061;
+    --seat-face: #101820;
+    --stage: #15191f;
+    --shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 10px 28px rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+  /* 라이트 = 어르신도 잘 보이도록 대비를 더 높인 흰 바탕 */
+  :root[data-theme='light'] {
+    --fg: #0a0f18;
+    --muted: #4f5b6b;
+    --line: #d5dce5;
+    color-scheme: light;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-text);
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    -webkit-text-size-adjust: 100%;
+    overflow: hidden;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  button,
+  input,
+  select {
+    font: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+  }
+  button {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  img {
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+  :focus-visible {
+    outline: 3px solid var(--accent-2);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+
+  #app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--bg);
+    position: relative;
+  }
+  @media (min-width: 600px) {
+    #app {
+      max-width: 430px;
+      height: min(100%, 900px);
+      margin: auto;
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      top: 50%;
+      transform: translateY(-50%);
+    }
+  }
+
+  /* 3D 아이콘 크기 */
+  .i3d {
+    display: block;
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    flex: none;
+  }
+  .i3d.xs {
+    width: 20px;
+    height: 20px;
+  }
+  .i3d.sm {
+    width: 24px;
+    height: 24px;
+  }
+  .i3d.md {
+    width: 36px;
+    height: 36px;
+  }
+  .i3d.lg {
+    width: 52px;
+    height: 52px;
+  }
+  .i3d.xl {
+    width: 76px;
+    height: 76px;
+  }
+  .inline-ic {
+    display: inline-block;
+    width: 1.25em;
+    height: 1.25em;
+    vertical-align: -0.25em;
+    object-fit: contain;
+  }
+  .ictile {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+  .ictile .i3d {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* 상단 */
+  .top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 60px;
+    padding-block: 8px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .top .title {
+    font: 700 1.125rem/1.3 var(--font-head);
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .iconbtn {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    border: none;
+    background: var(--surface);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex: none;
+    box-shadow: var(--shadow);
+  }
+  .iconbtn svg {
+    width: 24px;
+    height: 24px;
+  }
+  .badge-dot {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: var(--bad);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 10px;
+    padding: 4px 9px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1.4;
+  }
+  .chip .i3d {
+    width: 16px;
+    height: 16px;
+  }
+  .chip.demo {
+    background: var(--accent-soft);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px rgba(0, 44, 95, 0.12);
+  }
+  .chip.ok {
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+  .chip.bad {
+    background: var(--bad-soft);
+    color: var(--bad);
+  }
+  .chip.teal {
+    background: var(--accent-2-soft);
+    color: var(--accent-2);
+  }
+  .chip.warn {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .chip.muted {
+    background: var(--surface-2);
+    color: var(--muted);
+  }
+  .chip.accent {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .chip.heat {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+
+  /* 본문 */
+  .content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-block: 4px 28px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scroll-padding-bottom: 120px;
+  }
+  .content.flush {
+    padding-block: 0 0;
+    gap: 0;
+  }
+  .content > * {
+    flex-shrink: 0;
+  }
+  .pad {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-head);
+    font-weight: 700;
+    margin: 0;
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+  h1 {
+    font-size: 1.625rem;
+    line-height: 1.35;
+  }
+  h2 {
+    font-size: 1.3rem;
+    line-height: 1.4;
+  }
+  h3 {
+    font-size: 1.1rem;
+    line-height: 1.4;
+  }
+  p {
+    margin: 0;
+  }
+  .muted {
+    color: var(--muted);
+  }
+  .small {
+    font-size: 0.875rem;
+  }
+  .tiny {
+    font-size: 0.78rem;
+  }
+  .card {
+    background: var(--surface);
+    border-radius: var(--r);
+    padding: 18px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+  .card.soft {
+    box-shadow: none;
+    background: var(--surface-2);
+  }
+  .card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font: 700 1.02rem var(--font-head);
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .row.wrap {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .grow {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .grow > b,
+  .grow > .small,
+  .grow > .tiny,
+  .grow > span {
+    display: block;
+  }
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .grid2 > .btn {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  @media (max-width: 340px) {
+    .grid2 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* 버튼 */
+  .btn {
+    min-height: var(--tap);
+    border: none;
+    border-radius: 16px;
+    padding: 12px 18px;
+    font-weight: 700;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--surface-2);
+    color: var(--fg);
+    transition:
+      transform 0.12s,
+      opacity 0.2s,
+      background 0.2s;
+    max-width: 100%;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+  .btn.teal {
+    background: var(--accent-2);
+    color: #fff;
+  }
+  .btn.soft {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .btn.ghost {
+    background: transparent;
+    box-shadow: inset 0 0 0 2px var(--line);
+  }
+  .btn.danger {
+    background: var(--bad-soft);
+    color: var(--bad);
+  }
+  .btn.block {
+    width: 100%;
+  }
+  .btn.lg {
+    min-height: 58px;
+    font-size: 1.06rem;
+    border-radius: 18px;
+  }
+  .btn.sm {
+    min-height: 44px;
+    padding: 8px 14px;
+    font-size: 0.92rem;
+    border-radius: 14px;
+  }
+  .btn:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn .i3d {
+    width: 24px;
+    height: 24px;
+  }
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 6px;
+  }
+  .actions.sticky {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg);
+    padding-bottom: 6px;
+    padding-top: 10px;
+  }
+
+  /* 큰 선택지 */
+  .bigchoice {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    border: none;
+    box-shadow: inset 0 0 0 2px var(--line);
+    border-radius: var(--r-md);
+    padding: 16px;
+    text-align: left;
+    min-height: 88px;
+    width: 100%;
+    transition:
+      box-shadow 0.15s,
+      background 0.15s;
+  }
+  .bigchoice.selected {
+    box-shadow: inset 0 0 0 3px var(--accent);
+    background: var(--accent-soft);
+  }
+  .bigchoice:disabled {
+    opacity: 0.5;
+  }
+  .bigchoice .ictile {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+  }
+  .bigchoice .ictile .i3d {
+    width: 40px;
+    height: 40px;
+  }
+  .bigchoice b {
+    display: block;
+    font-size: 1.06rem;
+  }
+  .bigchoice .grow span {
+    display: block;
+  }
+
+  /* 홈 바로가기 타일 */
+  .tiles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .tile {
+    border: none;
+    border-radius: 20px;
+    padding: 14px;
+    min-height: 76px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    background: var(--surface-2);
+    color: var(--fg);
+    transition: transform 0.12s;
+  }
+  .tile:active {
+    transform: scale(0.97);
+  }
+  .tile .i3d {
+    width: 44px;
+    height: 44px;
+    flex: none;
+  }
+  .tile > div {
+    min-width: 0;
+  }
+  .tile b {
+    display: block;
+    font: 700 1rem/1.3 var(--font-head);
+  }
+  .tile span {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.3;
+  }
+  .tile.primary {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+  .tile.primary span {
+    color: inherit;
+    opacity: 0.78;
+  }
+  .tile.primary .i3d {
+    color: inherit;
+  }
+  @media (max-width: 340px) {
+    .tiles {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* 입력 */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .field label {
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .input {
+    min-height: var(--tap);
+    border: none;
+    box-shadow: inset 0 0 0 2px var(--line);
+    border-radius: var(--r-sm);
+    padding: 10px 14px;
+    background: var(--surface);
+    font-size: 1rem;
+    width: 100%;
+  }
+  .input:focus {
+    box-shadow: inset 0 0 0 2px var(--accent-2);
+    outline: none;
+  }
+  select.input {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+      linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position:
+      calc(100% - 20px) 50%,
+      calc(100% - 14px) 50%;
+    background-size: 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 36px;
+    font-weight: 600;
+  }
+  .help {
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .toggle {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 56px;
+    height: 34px;
+    border-radius: 17px;
+    background: var(--surface-3);
+    position: relative;
+    flex: none;
+    transition: background 0.2s;
+    border: none;
+    margin: 0;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  .toggle:checked {
+    background: var(--accent);
+  }
+  .toggle:checked::after {
+    transform: translateX(22px);
+  }
+  .toggle:disabled {
+    opacity: 0.4;
+  }
+  .toggle.heat:checked {
+    background: var(--heat);
+  }
+  .toggle.cool:checked {
+    background: var(--cool);
+  }
+  .slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 40px;
+    background: transparent;
+    margin: 0;
+  }
+  .slider::-webkit-slider-runnable-track {
+    height: 10px;
+    border-radius: 5px;
+    background: var(--surface-3);
+  }
+  .slider::-moz-range-track {
+    height: 10px;
+    border-radius: 5px;
+    background: var(--surface-3);
+  }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface);
+    margin-top: -11px;
+    border: none;
+    box-shadow:
+      0 0 0 7px var(--accent) inset,
+      0 3px 8px rgba(0, 0, 0, 0.2);
+  }
+  .slider::-moz-range-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: none;
+    box-shadow:
+      0 0 0 7px var(--accent) inset,
+      0 3px 8px rgba(0, 0, 0, 0.2);
+  }
+  .slider:disabled::-webkit-slider-thumb {
+    box-shadow: 0 0 0 7px var(--muted) inset;
+  }
+  .slider:disabled::-moz-range-thumb {
+    box-shadow: 0 0 0 7px var(--muted) inset;
+  }
+  .ends {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 600;
+    margin-top: -4px;
+  }
+  .setting {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+  }
+  .setting:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+  .setting:last-child {
+    padding-bottom: 0;
+  }
+  .setting .head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+  }
+  .setting .head .name {
+    flex: 1;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+  .setting .val {
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-2);
+    font-weight: 700;
+    font-size: 0.92rem;
+    white-space: nowrap;
+  }
+  .setting.locked {
+    opacity: 0.55;
+  }
+  .stepper,
+  .presets {
+    display: flex;
+    gap: 6px;
+  }
+  .stepper button,
+  .presets button {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 46px;
+    border-radius: 14px;
+    border: none;
+    box-shadow: inset 0 0 0 2px var(--line);
+    background: var(--surface);
+    font-weight: 700;
+    padding: 6px 4px;
+  }
+  .presets button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.85rem;
+    min-height: 72px;
+  }
+  .presets button .i3d {
+    width: 30px;
+    height: 30px;
+  }
+  .stepper button.on,
+  .presets button.on {
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 2px var(--accent);
+    color: var(--accent);
+  }
+  .stepper button:disabled,
+  .presets button:disabled {
+    opacity: 0.4;
+  }
+
+  /* 하단 탐색 */
+  .nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding-top: 6px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    padding-left: max(8px, env(safe-area-inset-left, 0px));
+    padding-right: max(8px, env(safe-area-inset-right, 0px));
+  }
+  /* 선택된 탭만 모서리가 살짝 둥근 사각형에 연한 파랑을 채우고 아이콘, 글자를 진하게 */
+  .nav button {
+    min-height: 62px;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 4px 2px;
+    white-space: nowrap;
+    transition:
+      background 0.2s,
+      color 0.2s;
+  }
+  .nav .navic {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nav button .i3d {
+    transition:
+      filter 0.2s,
+      opacity 0.2s;
+    filter: grayscale(1);
+    opacity: 0.5;
+  }
+  .nav button.on {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .nav button.on .i3d {
+    filter: none;
+    opacity: 1;
+  }
+
+  /* 좌석 비주얼 (점토 질감 3D) */
+  .stage {
+    position: relative;
+    border-radius: 24px;
+    background: radial-gradient(120% 95% at 50% 10%, #ffffff 0%, var(--stage) 75%);
+    overflow: hidden;
+  }
+  .seatwrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: 100%;
+  }
+  .seatwrap[data-mode='2d'] {
+    padding: 10px 4px 2px;
+  }
+  .seatwrap[data-mode='3d'] {
+    aspect-ratio: 1/0.56;
+    max-height: 230px;
+    touch-action: pan-y;
+    cursor: pointer;
+  }
+  .seatwrap[data-mode='3d'].compact {
+    aspect-ratio: 1/0.5;
+    max-height: 190px;
+    cursor: default;
+  }
+  .stage.tap {
+    cursor: pointer;
+    transition: transform 0.12s;
+  }
+  .stage.tap:active {
+    transform: scale(0.985);
+  }
+  .seatwrap canvas.seat3d {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .stage-tag {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    z-index: 2;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    pointer-events: none;
+  }
+  .stage-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: rgba(255, 255, 255, 0.82);
+    padding: 4px 10px;
+    border-radius: 999px;
+    pointer-events: none;
+  }
+  :root[data-theme='dark'] .stage {
+    background: radial-gradient(120% 95% at 50% 10%, #22324a 0%, var(--stage) 75%);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .stage {
+      background: radial-gradient(120% 95% at 50% 10%, #22324a 0%, var(--stage) 75%);
+    }
+  }
+  .seatwrap svg {
+    width: min(100%, 340px);
+    height: auto;
+    max-width: 100%;
+    overflow: visible;
+  }
+  .seatvis .face {
+    fill: url(#sFace);
+  }
+  .seatvis .side {
+    fill: url(#sSide);
+  }
+  .seatvis.warm .face {
+    fill: url(#sWarmFace);
+  }
+  .seatvis.warm .side {
+    fill: url(#sWarmSide);
+  }
+  .seatvis .wface {
+    fill: url(#sFace);
+  }
+  .seatvis .wside {
+    fill: url(#sSide);
+  } /* 창문 틀, 송풍구는 열선과 무관하게 고정 색 */
+  .seatvis .gloss {
+    fill: url(#sGloss);
+    pointer-events: none;
+  }
+  .seatvis .rail {
+    fill: var(--surface-3);
+  }
+  .seatvis .seat-back {
+    transition: transform 0.5s cubic-bezier(0.3, 1.25, 0.5, 1);
+  }
+  .seatvis .seat-body {
+    transition: transform 0.45s cubic-bezier(0.3, 1.2, 0.5, 1);
+  }
+  .seatvis .rail-mark {
+    transition: cx 0.45s ease;
+  }
+  .seatvis .heat-glow {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .seatvis .heatw {
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .seatvis.warm .heatw {
+    opacity: 1;
+  }
+  .seatvis.warm .heatw path {
+    animation: rise 1.8s ease-in-out infinite;
+  }
+  .seatvis.warm .heatw path:nth-child(2) {
+    animation-delay: 0.3s;
+  }
+  .seatvis.warm .heatw path:nth-child(3) {
+    animation-delay: 0.6s;
+  }
+  @keyframes rise {
+    0% {
+      transform: translateY(6px);
+      opacity: 0.2;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-8px);
+      opacity: 0.1;
+    }
+  }
+  .seatvis .air {
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .seatvis.air-on .air {
+    opacity: 1;
+  }
+  .seatvis .airline {
+    stroke-dasharray: 10 9;
+    animation: flow 1.1s linear infinite;
+    transition:
+      opacity 0.3s,
+      stroke 0.3s;
+  }
+  @keyframes flow {
+    to {
+      stroke-dashoffset: -38;
+    }
+  }
+  .seatvis .glass {
+    transition:
+      height 0.45s ease,
+      y 0.45s ease;
+  }
+  .seatvis .vlabel {
+    font: 600 13px var(--font-text);
+    fill: var(--muted);
+  }
+  .statusline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+  .sticky-stage {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  /* 화면 높이가 충분하면 좌석 그림을 위에 고정해, 아래 설정을 조절하는 동안에도 좌석 변화가 보이게 한다 */
+  @media (min-height: 760px) {
+    .sticky-stage {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: var(--bg);
+      padding-bottom: 10px;
+      margin-top: -4px;
+      padding-top: 4px;
+    }
+  }
+
+  /* 좌석 선택(평면) */
+  .seatpick {
+    display: flex;
+    justify-content: center;
+  }
+  .seatpick svg {
+    width: min(100%, 250px);
+    height: auto;
+    max-width: 100%;
+  }
+  .seatpick .seatbtn {
+    cursor: pointer;
+  }
+
+  /* 지도 */
+  .mapbox {
+    position: relative;
+    overflow: hidden;
+    background: var(--surface-2);
+    touch-action: none;
+  }
+  .mapbox canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+  }
+  .mapbox .maptag {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    box-shadow: var(--shadow);
+  }
+  .mapbox .maplegend {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 8px 10px;
+    font-size: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    box-shadow: var(--shadow);
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .sheet-panel {
+    background: var(--bg);
+    border-radius: 24px 24px 0 0;
+    margin-top: -20px;
+    position: relative;
+  }
+  /* 실제 지도(MapLibre + OpenFreeMap). 지도 요소는 하나만 만들어 화면이 바뀔 때 옮겨 붙인다 */
+  .mapslot {
+    position: relative;
+    width: 100%;
+    height: clamp(240px, 46vh, 420px);
+  }
+  .mapgl {
+    position: absolute;
+    inset: 0;
+  }
+  .mapgl .maplibregl-ctrl-attrib {
+    font-size: 10px;
+    background: rgba(255, 255, 255, 0.7);
+  }
+  :root[data-theme='dark'] .mapgl .maplibregl-ctrl-attrib {
+    background: rgba(0, 0, 0, 0.55);
+    color: #aaa;
+  }
+  :root[data-theme='dark'] .mapgl .maplibregl-ctrl-attrib a {
+    color: #ccc;
+  }
+  .mapbox .maptag,
+  .mapbox .maplegend {
+    z-index: 3;
+  }
+  .mapbox .maplegend {
+    bottom: auto;
+    top: 12px;
+  }
+  .mapbox .maptools {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .mk-pin {
+    width: 34px;
+    height: 44px;
+    transform: translateY(-4px);
+    filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.3));
+  }
+  .mk-car {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow:
+      0 0 0 3px var(--accent),
+      0 6px 14px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mk-car img {
+    width: 30px;
+    height: 30px;
+  }
+  .mk-me {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3b7df2;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 8px rgba(59, 125, 242, 0.22);
+  }
+  .mapfallback {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* 내 자리 상태: 한 줄에 하나씩 */
+  .statlist {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-radius: var(--r);
+    box-shadow: var(--shadow);
+    padding: 4px 16px;
+  }
+  .statlist .srow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 50px;
+    border-top: 1px solid var(--line);
+  }
+  .statlist .srow:first-child {
+    border-top: none;
+  }
+  .statlist .srow .i3d {
+    width: 26px;
+    height: 26px;
+  }
+  .statlist .srow span {
+    flex: 1;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .statlist .srow b {
+    font-weight: 700;
+    text-align: right;
+  }
+  .statlist .srow b.on {
+    color: var(--accent-2);
+  }
+  [data-theme='dark'] .statlist {
+    background: linear-gradient(150deg, #282b31, #212328);
+    box-shadow: var(--neu);
+  }
+  /* 탑승 시간 직접 입력(시, 분) */
+  .hmrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+  .hmrow .input {
+    width: 5.2em;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    padding: 8px 6px;
+  }
+  /* 탑승 희망 시간 */
+  .timepick {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .timepick button {
+    min-height: 52px;
+    border-radius: 14px;
+    border: none;
+    box-shadow: inset 0 0 0 2px var(--line);
+    background: var(--surface);
+    font-weight: 700;
+    font-size: 0.92rem;
+    padding: 4px;
+  }
+  .timepick button.on {
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 2px var(--accent);
+    color: var(--accent);
+  }
+  @media (max-width: 340px) {
+    .timepick {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  /* 시작 화면(스플래시)과 테마 고르기 */
+  .splash {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: radial-gradient(120% 80% at 50% 30%, #0b3d78 0%, #002c5f 45%, #00152e 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    color: #fff;
+    animation: splashOut 0.45s ease 2.4s forwards;
+    cursor: pointer;
+  }
+  .splash .emb {
+    width: 200px;
+    height: 134px;
+  }
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes rise2 {
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @keyframes fade {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes splashOut {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+  .themepick {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .themecard {
+    border: none;
+    border-radius: 22px;
+    padding: 10px;
+    background: var(--surface-2);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+    text-align: left;
+    box-shadow: inset 0 0 0 2px var(--line);
+  }
+  .themecard.on {
+    box-shadow: inset 0 0 0 3px var(--accent);
+  }
+  .themecard .pv {
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 170px;
+  }
+  .themecard .pv i {
+    display: block;
+    border-radius: 8px;
+  }
+  .themecard b {
+    font-size: 1rem;
+    padding: 0 4px;
+  }
+  .themecard span.d {
+    font-size: 0.8rem;
+    color: var(--muted);
+    padding: 0 4px 4px;
+  }
+  .seatpick .taken text {
+    fill: var(--muted);
+  }
+
+  /* 상태 */
+  .steps {
+    display: flex;
+    gap: 4px;
+  }
+  .steps div {
+    flex: 1;
+    text-align: center;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .steps div span {
+    display: block;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--surface-3);
+    margin-bottom: 5px;
+  }
+  .steps div.done span {
+    background: var(--ok);
+  }
+  .steps div.now span {
+    background: var(--accent);
+  }
+  .steps div.now {
+    color: var(--accent);
+  }
+  .banner {
+    border-radius: var(--r-md);
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    border: none;
+    text-align: left;
+  }
+  .banner .i3d {
+    width: 40px;
+    height: 40px;
+  }
+  .banner.warn {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .banner.ok {
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+  .banner.bad {
+    background: var(--bad-soft);
+    color: var(--bad);
+  }
+  .banner.info {
+    background: var(--accent-2-soft);
+    color: var(--accent-2);
+  }
+  .banner b {
+    display: block;
+    font-size: 1rem;
+  }
+  .banner p {
+    color: var(--fg);
+  }
+  .banner > div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* 시트, 토스트 */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 16, 28, 0.45);
+    display: flex;
+    align-items: flex-end;
+    z-index: 30;
+  }
+  .sheet {
+    background: var(--surface);
+    border-radius: 28px 28px 0 0;
+    width: 100%;
+    max-height: 85%;
+    overflow-y: auto;
+    padding-block: 12px calc(18px + env(safe-area-inset-bottom, 0px));
+    padding-left: max(18px, env(safe-area-inset-left, 0px));
+    padding-right: max(18px, env(safe-area-inset-right, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: up 0.22s ease;
+  }
+  .sheet .sheet-ic {
+    display: flex;
+    justify-content: center;
+    padding-top: 4px;
+  }
+  .sheet h3 {
+    text-align: center;
+  }
+  .sheet > p {
+    text-align: center;
+  }
+  @keyframes up {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  .sheet .handle {
+    width: 40px;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--line);
+    margin: 0 auto;
+  }
+  .toast {
+    position: absolute;
+    left: max(12px, env(safe-area-inset-left, 0px));
+    right: max(12px, env(safe-area-inset-right, 0px));
+    top: calc(10px + env(safe-area-inset-top, 0px));
+    z-index: 40;
+    background: rgba(28, 27, 27, 0.94);
+    color: #fff;
+    border-radius: 18px;
+    padding: 12px 8px 12px 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    animation: up 0.25s ease;
+  }
+  .toast > div {
+    flex: 1;
+    min-width: 0;
+  }
+  .toast b {
+    display: block;
+  }
+  .toast .small {
+    opacity: 0.85;
+    display: block;
+  }
+  .toast button {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-weight: 700;
+    min-width: 44px;
+    min-height: 44px;
+    flex: none;
+  }
+
+  /* 리스트 */
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border-radius: var(--r-md);
+    padding: 12px 14px;
+    min-height: 64px;
+    border: none;
+    width: 100%;
+    text-align: left;
+    color: var(--fg);
+  }
+  .item.on-soft {
+    background: var(--surface-2);
+  }
+  .item b {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .chev {
+    width: 22px;
+    height: 22px;
+    flex: none;
+    color: var(--muted);
+  }
+  .member {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--surface-2);
+    border-radius: var(--r-md);
+    padding: 14px;
+  }
+  .member-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .perm-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    padding: 4px 14px;
+    background: var(--surface);
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .logbox {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    background: var(--surface-2);
+    border-radius: 12px;
+    padding: 10px;
+    max-height: 220px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .qr {
+    display: block;
+    width: 180px;
+    height: 180px;
+    max-width: 100%;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 16px;
+    padding: 10px;
+  }
+  .pulse {
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    padding-block: 20px 8px;
+  }
+  .logo {
+    width: 104px;
+    height: 104px;
+    border-radius: 32px;
+    background: linear-gradient(150deg, var(--surface) 0%, var(--accent-soft) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      0 0 0 1px rgba(0, 44, 95, 0.08),
+      0 14px 30px rgba(0, 44, 95, 0.16);
+  }
+  .logo .i3d {
+    width: 70px;
+    height: 70px;
+  }
+  .greet {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+  }
+  .greet h1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .greet h1 .i3d {
+    width: 34px;
+    height: 34px;
+  }
+  .statuspill {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border-radius: 999px;
+    padding: 7px 14px 7px 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    box-shadow: var(--shadow);
+  }
+  .statuspill i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ok);
+    flex: none;
+  }
+  .statuspill.wait i {
+    background: var(--warn);
+  }
+  .kv {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 14px;
+    font-size: 0.92rem;
+  }
+  .kv dt {
+    color: var(--muted);
+  }
+  .kv dd {
+    margin: 0;
+    font-weight: 600;
+    min-width: 0;
+  }
+
+  /* ===== 선 아이콘 공통 ===== */
+  .i3d {
+    stroke: currentColor;
+  }
+  .ictile {
+    color: var(--accent);
+  }
+  .i3d.xl,
+  .i3d.lg {
+    stroke-width: 1.4;
+  }
+  .hero .i3d.xl {
+    width: 96px;
+    height: 96px;
+    padding: 20px;
+    border-radius: 50%;
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .nav button .i3d {
+    width: 26px;
+    height: 26px;
+  }
+  .mk-car img {
+    width: 30px;
+    height: 30px;
+  }
+  /* ===== 원형 온도 다이얼 ===== */
+  .dialrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .dial {
+    width: 200px;
+    height: 200px;
+    max-width: 58vw;
+    flex: none;
+  }
+  .dial-face {
+    fill: var(--surface-2);
+  }
+  .dial-ticks line {
+    stroke: var(--muted);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    opacity: 0.35;
+  }
+  .dial-ticks line.big {
+    stroke-width: 2.4;
+    opacity: 0.6;
+  }
+  .dial-ticks line.lit {
+    stroke: var(--accent-2);
+    opacity: 0.9;
+  }
+  .dial-track {
+    fill: none;
+    stroke: var(--surface-3);
+    stroke-width: 12;
+    stroke-linecap: round;
+  }
+  .dial-val {
+    fill: none;
+    stroke-width: 12;
+    stroke-linecap: round;
+  }
+  .dial-knob {
+    fill: var(--surface);
+    stroke: #2f8cff;
+    stroke-width: 4;
+  }
+  .dial-num {
+    font: 300 50px var(--font-head);
+    fill: var(--fg);
+    letter-spacing: -0.03em;
+  }
+  .dial-deg {
+    font: 500 16px var(--font-text);
+    fill: var(--muted);
+  }
+  .dial-sub {
+    font: 600 13px var(--font-text);
+    fill: var(--muted);
+  }
+  .dial.off {
+    opacity: 0.4;
+  }
+  .roundbtn {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: none;
+    background: var(--surface-2);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+  .roundbtn:disabled {
+    opacity: 0.4;
+  }
+
+  /* ===== 다크 모드: 뉴모피즘 + 블루 글로우 (다크 차량 앱, 글로우 게이지 레퍼런스) ===== */
+  :root[data-theme='dark'] {
+    --bg: #1d1f23;
+    --surface: #25282d;
+    --surface-2: #1f2126;
+    --surface-3: #2e3238;
+    --fg: #eef1f5;
+    --muted: #8e959f;
+    --line: rgba(255, 255, 255, 0.06);
+    --accent: #2f8cff;
+    --accent-2: #64b5ff;
+    --accent-fg: #ffffff;
+    --accent-soft: rgba(47, 140, 255, 0.14);
+    --accent-2-soft: rgba(100, 181, 255, 0.12);
+    --ok: #64b5ff;
+    --ok-soft: rgba(100, 181, 255, 0.12);
+    --warn: #f2b44c;
+    --warn-soft: rgba(242, 180, 76, 0.12);
+    --bad: #ff6b6b;
+    --bad-soft: rgba(255, 107, 107, 0.12);
+    --stage: #17191c;
+    --neu: -6px -6px 14px rgba(255, 255, 255, 0.035), 8px 10px 24px rgba(0, 0, 0, 0.6);
+    --neu-sm: -3px -3px 8px rgba(255, 255, 255, 0.03), 5px 6px 14px rgba(0, 0, 0, 0.55);
+    --neu-in: inset 4px 4px 10px rgba(0, 0, 0, 0.55), inset -3px -3px 8px rgba(255, 255, 255, 0.03);
+    --glow-btn: radial-gradient(130% 150% at 30% 15%, #6cc0ff 0%, #2f8cff 42%, #1560d4 100%);
+    --glow: 0 10px 26px rgba(47, 140, 255, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    --shadow: var(--neu);
+  }
+  [data-theme='dark'] body {
+    background: radial-gradient(130% 80% at 50% -10%, #2c3036 0%, #1d1f23 50%, #17181b 100%);
+  }
+  [data-theme='dark'] #app {
+    background: transparent;
+  }
+  [data-theme='dark'] .card {
+    background: linear-gradient(150deg, #282b31 0%, #212328 100%);
+    box-shadow: var(--neu);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+  }
+  [data-theme='dark'] .card.soft,
+  [data-theme='dark'] .item.on-soft,
+  [data-theme='dark'] .member,
+  [data-theme='dark'] .perm-row {
+    background: #1f2125;
+    box-shadow: var(--neu-in);
+    border: none;
+  }
+  [data-theme='dark'] .item {
+    background: linear-gradient(150deg, #282b31, #212328);
+    box-shadow: var(--neu-sm);
+  }
+  [data-theme='dark'] .btn {
+    background: linear-gradient(150deg, #2b2e34, #222428);
+    box-shadow: var(--neu-sm);
+    color: var(--fg);
+  }
+  [data-theme='dark'] .btn.primary,
+  [data-theme='dark'] .btn.teal,
+  [data-theme='dark'] .tile.primary {
+    background: var(--glow-btn);
+    color: #fff;
+    box-shadow: var(--glow);
+  }
+  [data-theme='dark'] .btn.soft {
+    color: var(--accent-2);
+  }
+  [data-theme='dark'] .btn.ghost {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.08);
+  }
+  [data-theme='dark'] .btn.danger {
+    color: var(--bad);
+  }
+  [data-theme='dark'] .btn:disabled {
+    opacity: 0.38;
+    box-shadow: none;
+  }
+  [data-theme='dark'] .iconbtn {
+    border-radius: 50%;
+    background: linear-gradient(150deg, #2b2e34, #202226);
+    box-shadow: var(--neu-sm);
+    color: var(--fg);
+  }
+  [data-theme='dark'] .tile {
+    background: linear-gradient(150deg, #292c32, #212328);
+    box-shadow: var(--neu);
+    color: var(--fg);
+  }
+
+  [data-theme='dark'] .ictile {
+    background: #1e2024;
+    box-shadow: var(--neu-in);
+    color: var(--accent-2);
+  }
+
+  [data-theme='dark'] .stage {
+    background: radial-gradient(120% 100% at 50% 0%, #24272c 0%, #17191c 80%);
+    box-shadow: var(--neu-in);
+  }
+  [data-theme='dark'] .chip {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+  [data-theme='dark'] .chip.muted {
+    background: #1e2024;
+    color: var(--muted);
+  }
+  [data-theme='dark'] .chip.heat {
+    background: var(--glow-btn);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(47, 140, 255, 0.35);
+  }
+  [data-theme='dark'] .chip.demo {
+    background: #1e2024;
+    color: var(--accent-2);
+    box-shadow: var(--neu-in);
+  }
+  [data-theme='dark'] .statuspill {
+    background: #1f2125;
+    box-shadow: var(--neu-in);
+  }
+  [data-theme='dark'] .statuspill i {
+    box-shadow: 0 0 10px var(--ok);
+  }
+  [data-theme='dark'] .nav {
+    margin: 0 12px calc(10px + env(safe-area-inset-bottom, 0px));
+    border-radius: 30px;
+    background: linear-gradient(150deg, #27292f, #1f2125);
+    border: none;
+    box-shadow: var(--neu);
+    padding: 6px;
+  }
+  [data-theme='dark'] .nav button {
+    color: var(--muted);
+  }
+  [data-theme='dark'] .nav button.on {
+    background: transparent;
+    color: var(--accent-2);
+  }
+  [data-theme='dark'] .nav button.on .i3d {
+    filter: none;
+    opacity: 1;
+  }
+  [data-theme='dark'] .bigchoice {
+    background: linear-gradient(150deg, #282b31, #212328);
+    box-shadow: var(--neu);
+  }
+  [data-theme='dark'] .bigchoice.selected {
+    box-shadow:
+      var(--neu),
+      inset 0 0 0 2px var(--accent),
+      0 0 22px rgba(47, 140, 255, 0.25);
+  }
+  [data-theme='dark'] .presets button,
+  [data-theme='dark'] .stepper button,
+  [data-theme='dark'] .timepick button,
+  [data-theme='dark'] .roundbtn {
+    background: linear-gradient(150deg, #2b2e34, #212328);
+    box-shadow: var(--neu-sm);
+    color: var(--fg);
+  }
+  [data-theme='dark'] .presets button.on,
+  [data-theme='dark'] .stepper button.on,
+  [data-theme='dark'] .timepick button.on {
+    background: var(--glow-btn);
+    color: #fff;
+    box-shadow: var(--glow);
+  }
+
+  [data-theme='dark'] .stepper {
+    justify-content: space-between;
+    gap: 8px;
+  }
+  [data-theme='dark'] .stepper button {
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
+    min-height: 0;
+    border-radius: 50%;
+  }
+  [data-theme='dark'] .input {
+    background: #1b1d21;
+    box-shadow: var(--neu-in);
+  }
+  [data-theme='dark'] .input:focus {
+    box-shadow:
+      var(--neu-in),
+      0 0 0 2px var(--accent);
+  }
+  [data-theme='dark'] .toggle {
+    background: #16181b;
+    box-shadow: var(--neu-in);
+  }
+  [data-theme='dark'] .toggle::after {
+    background: linear-gradient(150deg, #50555e, #33373d);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+  [data-theme='dark'] .toggle:checked {
+    background: var(--glow-btn);
+    box-shadow: 0 0 14px rgba(47, 140, 255, 0.55);
+  }
+  [data-theme='dark'] .toggle:checked::after {
+    background: #fff;
+  }
+  [data-theme='dark'] .toggle.heat:checked {
+    background: var(--glow-btn);
+    box-shadow: 0 0 14px rgba(47, 140, 255, 0.55);
+  }
+  [data-theme='dark'] .slider::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 4px;
+    background:
+      linear-gradient(90deg, #1560d4, #5fb6ff) 0 0 / var(--p, 0%) 100% no-repeat,
+      #15171a;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.6);
+  }
+  [data-theme='dark'] .slider::-moz-range-track {
+    height: 8px;
+    border-radius: 4px;
+    background:
+      linear-gradient(90deg, #1560d4, #5fb6ff) 0 0 / var(--p, 0%) 100% no-repeat,
+      #15171a;
+  }
+  [data-theme='dark'] .slider::-webkit-slider-thumb {
+    margin-top: -12px;
+    background: linear-gradient(150deg, #3a3f47, #24272c);
+    box-shadow:
+      0 0 0 3px #2f8cff inset,
+      0 0 14px rgba(47, 140, 255, 0.8),
+      0 4px 10px rgba(0, 0, 0, 0.5);
+  }
+  [data-theme='dark'] .slider::-moz-range-thumb {
+    background: linear-gradient(150deg, #3a3f47, #24272c);
+    box-shadow:
+      0 0 0 3px #2f8cff inset,
+      0 0 14px rgba(47, 140, 255, 0.8);
+  }
+  [data-theme='dark'] .steps div span {
+    background: #16181b;
+    box-shadow: var(--neu-in);
+  }
+  [data-theme='dark'] .steps div.done span,
+  [data-theme='dark'] .steps div.now span {
+    background: var(--glow-btn);
+    box-shadow: 0 0 10px rgba(47, 140, 255, 0.6);
+  }
+  [data-theme='dark'] .banner {
+    background: linear-gradient(150deg, #272a30, #1f2125) !important;
+    box-shadow:
+      var(--neu),
+      inset 3px 0 0 currentColor;
+  }
+  [data-theme='dark'] .banner p {
+    color: var(--fg);
+  }
+
+  [data-theme='dark'] .sheet {
+    background: linear-gradient(170deg, #2a2d33, #1f2125);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+  }
+  [data-theme='dark'] .toast {
+    background: rgba(30, 32, 37, 0.94);
+    backdrop-filter: blur(12px);
+    box-shadow:
+      0 12px 32px rgba(0, 0, 0, 0.6),
+      inset 0 0 0 1px rgba(100, 181, 255, 0.25);
+  }
+  [data-theme='dark'] .toast .i3d {
+    color: var(--accent-2);
+  }
+  [data-theme='dark'] .greet h1 .i3d {
+    color: var(--accent-2);
+  }
+  [data-theme='dark'] .hero .i3d.xl {
+    background: #1e2024;
+    box-shadow:
+      var(--neu-in),
+      0 0 34px rgba(47, 140, 255, 0.18);
+    color: var(--accent-2);
+  }
+  [data-theme='dark'] .logo {
+    background: linear-gradient(150deg, #2b2e34, #1f2125);
+    box-shadow: var(--neu);
+  }
+  [data-theme='dark'] .dial-face {
+    fill: #1c1e22;
+  }
+  [data-theme='dark'] .dial-track {
+    stroke: #15171a;
+  }
+  [data-theme='dark'] .dial-knob {
+    fill: #2b2e34;
+    filter: drop-shadow(0 0 6px rgba(47, 140, 255, 0.8));
+  }
+  [data-theme='dark'] .mk-car {
+    background: #25282d;
+    box-shadow:
+      0 0 0 3px #2f8cff,
+      0 0 18px rgba(47, 140, 255, 0.6);
+  }
+  [data-theme='dark'] .stage-tag .chip {
+    background: rgba(18, 20, 24, 0.78);
+    backdrop-filter: blur(6px);
+    color: var(--fg);
+  }
+  [data-theme='dark'] .stage-tag .chip.heat {
+    background: var(--glow-btn);
+    color: #fff;
+  }
+  [data-theme='dark'] .themecard {
+    background: linear-gradient(150deg, #282b31, #212328);
+    box-shadow: var(--neu);
+  }
+</style>
+
+<div id="app" aria-live="polite"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="assets/vendor/maplibre-gl.js"></script>
+<script src="carpoom-core.js"></script>
+<script src="carpoom-geo.js"></script>
+<script src="carpoom-sync.js"></script>
+<script src="carpoom-brand.js"></script>
+<script>
+  (function () {
+    'use strict';
+    const Core = window.CarpoomCore;
+    const { CarpoomCore, ROLE, BOOKING, APPLY, VEHICLE_EVENT, OUTBOUND, DEFAULT_PROFILE, clone } = Core;
+
+    /* ===================== 교체 가능한 어댑터 (데모 구현) ===================== */
+    // 저장소: localStorage. 실제 서비스에서는 서버 동기화 저장소로 교체.
+    const Storage = {
+      KEY: 'carpoom.state.v3',
+      PREF: 'carpoom.prefs.v2',
+      load() {
+        try {
+          const s = localStorage.getItem(this.KEY);
+          return s ? JSON.parse(s) : null;
+        } catch (e) {
+          return null;
+        }
+      },
+      save(state) {
+        try {
+          localStorage.setItem(this.KEY, JSON.stringify(state));
+        } catch (e) {}
+      },
+      loadPrefs() {
+        try {
+          const s = localStorage.getItem(this.PREF);
+          return s ? JSON.parse(s) : {};
+        } catch (e) {
+          return {};
+        }
+      },
+      savePrefs(p) {
+        try {
+          localStorage.setItem(this.PREF, JSON.stringify(p));
+        } catch (e) {}
+      },
+      clear() {
+        try {
+          localStorage.removeItem(this.KEY);
+          localStorage.removeItem(this.PREF);
+        } catch (e) {}
+      },
+    };
+    // 차량 게이트웨이: 모바일→서버/Pleos 메시지를 보내는 곳. 데모는 로그만 남기고, 응답 이벤트는 개발 메뉴가 만든다.
+    const DemoGateway = {
+      sent: [],
+      send(msg) {
+        this.sent.unshift(msg);
+        if (this.sent.length > 50) this.sent.length = 50;
+      },
+    };
+    // 위치 권한: 체험에서는 기기 위치 대신 시나리오 위치를 쓴다(아버지=데이케어센터, 딸=학교). 실제 앱에서는 Geolocation/FusedLocation으로 교체.
+    const GEO = window.CarpoomGeo;
+    const DemoLocation = {
+      status: 'unknown', // unknown | granted | denied
+      point() {
+        const u = me();
+        const P = GEO.PLACES;
+        const p = u && u.id === 'u_youngsoo' ? P.daycare : u && u.id === 'u_haneul' ? P.school : GEO.CENTER;
+        return { lat: p.lat, lng: p.lng };
+      },
+      request() {
+        ui.sheet = { type: 'locperm' };
+        render();
+      },
+    };
+    // Pleos QR: 실제로는 Pleos 화면이 QR을 주기적으로 갱신한다. 데모는 화면 안에 시뮬레이터로 표시.
+    const DemoPleosQr = {
+      TTL: 45,
+      token: null,
+      issue(vehicleId) {
+        this.token = {
+          code: Math.random().toString(36).slice(2, 8).toUpperCase(),
+          vehicleId,
+          issuedAt: Date.now(),
+          ttlSec: this.TTL,
+        };
+        return this.token;
+      },
+      expireNow() {
+        if (this.token) this.token.issuedAt = Date.now() - (this.TTL + 1) * 1000;
+      },
+      remaining() {
+        if (!this.token) return 0;
+        return Math.max(0, Math.ceil(this.token.ttlSec - (Date.now() - this.token.issuedAt) / 1000));
+      },
+    };
+    // 앱 통화: 실제 통화 서비스 없음. 테스트 화면만 제공하고 "연결됨"으로 표시하지 않는다.
+    const DemoCall = { available: false };
+
+    /* ===================== 코어 초기화 ===================== */
+    const QS = new URLSearchParams(location.search);
+    const loaded = Storage.load();
+    const core = new CarpoomCore({ state: loaded && loaded.version === 3 ? loaded : undefined, persist: Storage });
+    if (!loaded || loaded.version !== 3) core.seedDemo();
+    core.onOutbound((m) => DemoGateway.send(m));
+    // 시연 무대에서 계정을 정해 띄울 때: ?user=u_youngsoo (이 기기에서만 적용, 다른 화면과 동기화하지 않음)
+    if (QS.get('user') && core.state.users[QS.get('user')]) core.state.sessionUserId = QS.get('user');
+    // 모바일 ↔ Pleos 화면 실시간 동기화(체험용. 실제로는 서버가 담당)
+    const SYNC = window.CarpoomSync.attach(core, { appId: 'mobile', storageKey: Storage.KEY });
+
+    const prefs = Storage.loadPrefs();
+    const ui = {
+      view: QS.get('user') ? null : prefs.view || null,
+      draft: null,
+      draftVehicleId: prefs.vehicleId || null,
+      pin: null,
+      bookingSeat: null,
+      bookingNote: '',
+      bookingTime: { mode: 'asap' },
+      sheet: null,
+      toast: null,
+      toastTimer: null,
+      lastNotifId: null,
+      bigText: !!prefs.bigText,
+      devTargetUser: null,
+      signup: { name: '', isAdult: null },
+      pleosVehicle: null,
+      qrTimer: null,
+      // 테마: 첫 실행 때 두 예시를 보고 고른다. ?theme=dark|light로 정해서 띄울 수도 있다.
+      theme: ['dark', 'light'].includes(QS.get('theme')) ? QS.get('theme') : prefs.theme || null,
+      splash: !QS.has('nosplash'),
+    };
+    function applyTheme() {
+      if (ui.theme) document.documentElement.dataset.theme = ui.theme;
+      else delete document.documentElement.dataset.theme;
+    }
+    applyTheme();
+    document.documentElement.style.fontSize = ui.bigText ? '118%' : '';
+
+    const app = document.getElementById('app');
+    const h = (s) =>
+      String(s == null ? '' : s).replace(
+        /[&<>"']/g,
+        (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+      );
+    const me = () => core.currentUser();
+    const fmtTime = (t) => {
+      const d = new Date(t);
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    };
+    function savePrefs() {
+      Storage.savePrefs({
+        view: ['home', 'settings', 'booking', 'profile', 'waiting', 'dhome', 'dvehicles', 'dqr'].includes(ui.view)
+          ? ui.view
+          : null,
+        vehicleId: ui.draftVehicleId,
+        bigText: ui.bigText,
+        theme: ui.theme,
+      });
+    }
+    const isDark = () => {
+      const t = document.documentElement.dataset.theme;
+      return t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+    };
+
+    /* ===================== 3D 아이콘 (Microsoft Fluent Emoji 3D, MIT) ===================== */
+    // 아티팩트에서는 assets/icons/*.webp 파일을, 단일 파일 빌드에서는 window.__CARPOOM_ICONS의 data URI를 쓴다.
+    const iconSrc = (n) => (window.__CARPOOM_ICONS && window.__CARPOOM_ICONS[n]) || 'assets/icons/' + n + '.webp';
+    // ---- 3D 아이콘: Microsoft Fluent Emoji 3D(MIT, 상업적 사용 가능) 원본 색. tools/fetch-fluent-icons.js로 받는다 ----
+    const icName = (n) => n;
+    const ic = (n, cls, alt) =>
+      `<img class="i3d ${cls || ''}" data-ic="${n}" src="${iconSrc(icName(n))}" alt="${h(alt || '')}" draggable="false" decoding="async">`;
+    const tile = (n, cls) => `<span class="ictile ${cls || ''}">${ic(n)}</span>`;
+    // 온도 다이얼(원형 게이지): 16~30°C를 270° 호로 보여 준다
+    function tempDial(t, off) {
+      const a0 = 135,
+        sweep = 270,
+        k = (t - 16) / 14,
+        a1 = a0 + sweep * k;
+      const pt = (a, r) => {
+        const q = (a * Math.PI) / 180;
+        return [100 + r * Math.cos(q), 100 + r * Math.sin(q)];
+      };
+      const arc = (from, to, r) => {
+        const [x0, y0] = pt(from, r),
+          [x1, y1] = pt(to, r);
+        return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${to - from > 180 ? 1 : 0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+      };
+      const ticks = Array.from({ length: 29 }, (_, i) => {
+        const a = a0 + (sweep * i) / 28,
+          big = i % 7 === 0;
+        const [x0, y0] = pt(a, 93),
+          [x1, y1] = pt(a, big ? 85 : 89);
+        return `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" class="${big ? 'big' : ''} ${a <= a1 + 0.01 && k > 0 ? 'lit' : ''}"/>`;
+      }).join('');
+      const [kx, ky] = pt(a1, 74);
+      const word = t <= 21 ? '시원하게' : t >= 25 ? '따뜻하게' : '알맞게';
+      return `<svg class="dial ${off ? 'off' : ''}" viewBox="0 0 200 200" role="img" aria-label="온도 ${t}도">
+    <defs><linearGradient id="dialg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#1560D4"/><stop offset=".55" stop-color="#2F8CFF"/><stop offset="1" stop-color="#5FE3FF"/></linearGradient>
+    <filter id="dglow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <circle cx="100" cy="100" r="62" class="dial-face"/>
+    <g class="dial-ticks">${ticks}</g>
+    <path d="${arc(a0, a0 + sweep, 74)}" class="dial-track"/>
+    ${k > 0.001 ? `<path d="${arc(a0, a1, 74)}" class="dial-val" stroke="url(#dialg)" filter="url(#dglow)"/>` : ''}
+    <circle cx="${kx.toFixed(1)}" cy="${ky.toFixed(1)}" r="9" class="dial-knob"/>
+    <text x="100" y="108" class="dial-num" text-anchor="middle">${t}<tspan class="dial-deg" dy="-18">°C</tspan></text>
+    <text x="100" y="134" class="dial-sub" text-anchor="middle">${word}</text>
+  </svg>`;
+    }
+    function setSliderFill(el) {
+      const min = +el.min || 0,
+        max = +el.max || 100;
+      el.style.setProperty('--p', (((el.value - min) / (max - min)) * 100).toFixed(1) + '%');
+    }
+    const userIcon = (u) => (u && u.isAdult ? 'adult' : 'child');
+    const SVG = {
+      back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+      chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
+    };
+
+    /* ===================== 좌석 비주얼 (점토 질감 3D, 조작 연동) ===================== */
+    // 측면 형상을 여러 겹 비스듬히 쌓아 두께를 만들고(사선 투영), 등받이는 각 겹이 같은 힌지로 회전한다.
+    const SEAT = { depth: 16, step: 2, ox: 0.85, oy: -0.6, hinge: '108px 172px' };
+    function seatLayers(inner, rotating) {
+      let s = '';
+      for (let i = SEAT.depth; i > 0; i -= SEAT.step) {
+        const dx = (i * SEAT.ox).toFixed(1),
+          dy = (i * SEAT.oy).toFixed(1);
+        s += `<g transform="translate(${dx} ${dy})">${rotating ? `<g class="seat-back" style="transform-origin:${SEAT.hinge}">${inner}</g>` : inner}</g>`;
+      }
+      return s;
+    }
+    function seatSVG(p, caps) {
+      caps = caps || { seatPosition: true, recline: true, heater: true, climate: true, window: true };
+      const backSide = `<rect class="side" x="80" y="60" width="56" height="120" rx="27"/><rect class="side" x="93" y="48" width="7" height="16" rx="3"/><rect class="side" x="116" y="48" width="7" height="16" rx="3"/><rect class="side" x="82" y="8" width="52" height="46" rx="21"/>`;
+      const cushionSide = `<rect class="side" x="88" y="158" width="142" height="46" rx="23"/>`;
+      const winSide = `<rect class="wside" x="296" y="26" width="54" height="128" rx="14"/>`;
+      return `
+<svg class="seatvis" viewBox="-40 -14 400 262" role="img" aria-label="내 자리 비주얼">
+  <defs>
+    <linearGradient id="sFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--seat-hi)"/><stop offset="1" style="stop-color:var(--seat-lo)"/></linearGradient>
+    <linearGradient id="sSide" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--seat-side-hi)"/><stop offset="1" style="stop-color:var(--seat-side-lo)"/></linearGradient>
+    <linearGradient id="sWarmFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFD2AE"/><stop offset="1" stop-color="#FF8C52"/></linearGradient>
+    <linearGradient id="sWarmSide" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F08048"/><stop offset="1" stop-color="#C9551F"/></linearGradient>
+    <radialGradient id="sGloss" cx=".3" cy=".22" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".45" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="sFloor" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#0B1E36" stop-opacity=".28"/><stop offset="1" stop-color="#0B1E36" stop-opacity="0"/></radialGradient>
+    <radialGradient id="sHeat" cx=".5" cy=".55" r=".5"><stop offset="0" stop-color="#FF9A5C" stop-opacity=".75"/><stop offset="1" stop-color="#FF9A5C" stop-opacity="0"/></radialGradient>
+    <linearGradient id="sGlass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D7EEFC"/><stop offset=".55" stop-color="#9FD3F3"/><stop offset="1" stop-color="#6DB8E8"/></linearGradient>
+  </defs>
+  <ellipse cx="160" cy="228" rx="150" ry="18" fill="url(#sFloor)"/>
+  <ellipse class="heat-glow" cx="150" cy="140" rx="150" ry="110" fill="url(#sHeat)"/>
+  <!-- 창문 -->
+  <g class="windowg" opacity="${caps.window ? 1 : 0.35}">
+    ${seatLayers(winSide, false)}
+    <rect class="wface" x="296" y="26" width="54" height="128" rx="14"/>
+    <rect class="glass" x="303" y="33" width="40" height="114" rx="9" fill="url(#sGlass)"/>
+    <rect x="308" y="38" width="8" height="60" rx="4" fill="#fff" opacity=".55"/>
+    <text class="vlabel" x="323" y="176" text-anchor="middle">창문</text>
+  </g>
+  <!-- 공조 바람 -->
+  <g class="air">
+    <rect class="wside" x="266" y="50" width="24" height="12" rx="6"/>
+    <path class="airline" d="M262 60 q-12 -8 -24 0 t-24 0 t-24 0" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path class="airline" d="M262 76 q-12 -8 -24 0 t-24 0 t-24 0" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path class="airline" d="M262 92 q-12 -8 -24 0 t-24 0 t-24 0" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <g class="airtemp-g"><rect x="226" y="104" width="58" height="26" rx="13" fill="var(--surface)"/><text class="airtemp" x="255" y="122" text-anchor="middle" font-size="14" font-weight="700">22°</text></g>
+  </g>
+  <!-- 레일 -->
+  <rect class="rail" x="64" y="214" width="190" height="9" rx="4.5"/>
+  <circle class="rail-mark" cx="159" cy="218.5" r="8" fill="var(--accent)" stroke="var(--surface)" stroke-width="3" opacity="${caps.seatPosition ? 1 : 0.3}"/>
+  <!-- 좌석 본체 -->
+  <g class="seat-body">
+    <rect class="side" x="104" y="198" width="14" height="16" rx="5"/><rect class="side" x="200" y="198" width="14" height="16" rx="5"/>
+    ${seatLayers(backSide, true)}
+    <g class="seat-back" style="transform-origin:${SEAT.hinge}">
+      <rect class="face" x="80" y="60" width="56" height="120" rx="27"/>
+      <rect class="gloss" x="80" y="60" width="56" height="120" rx="27"/>
+      <rect x="95" y="76" width="26" height="78" rx="13" fill="#000" opacity=".05"/>
+      <rect class="face" x="82" y="8" width="52" height="46" rx="21"/>
+      <rect class="gloss" x="82" y="8" width="52" height="46" rx="21"/>
+      <rect x="92" y="22" width="32" height="4" rx="2" fill="var(--accent)" opacity=".35"/>
+    </g>
+    ${seatLayers(cushionSide, false)}
+    <rect class="face" x="88" y="158" width="142" height="46" rx="23"/>
+    <rect class="gloss" x="88" y="158" width="142" height="46" rx="23"/>
+    <rect x="104" y="168" width="108" height="20" rx="10" fill="#000" opacity=".05"/>
+    <g class="heatw">
+      <path d="M126 148q7-9 0-18t0-18" stroke="#F06A2A" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M158 148q7-9 0-18t0-18" stroke="#F06A2A" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M190 148q7-9 0-18t0-18" stroke="#F06A2A" stroke-width="5" fill="none" stroke-linecap="round"/>
+    </g>
+  </g>
+  <text class="vlabel" x="159" y="244" text-anchor="middle">뒤 ◀  좌석 위치  ▶ 앞</text>
+</svg>`;
+    }
+    function updateSeatVisual(root, p, caps) {
+      if (!root) return;
+      // 화면 상태를 data 속성으로도 남긴다(3D, 2D 공통, 자동 테스트가 읽음)
+      root.dataset.recline = (6 + p.recline * 0.34).toFixed(1);
+      root.dataset.warm = p.heater.on ? '1' : '0';
+      root.dataset.air = p.climate.on ? '1' : '0';
+      root.dataset.pos = String(p.seatPosition);
+      if (root.dataset.mode === '3d') {
+        Seat3D.setState(p, caps);
+        return;
+      }
+      const svg = root.querySelector('svg.seatvis');
+      if (!svg) return;
+      const ang = -(p.recline / 100) * 34;
+      svg.querySelectorAll('.seat-back').forEach((g) => {
+        g.style.transform = `rotate(${ang}deg)`;
+      });
+      const shift = (50 - p.seatPosition) * 0.6; // 0=앞(오른쪽), 100=뒤(왼쪽)
+      svg.querySelector('.seat-body').style.transform = `translateX(${shift}px)`;
+      svg.querySelector('.rail-mark').setAttribute('cx', 64 + 190 * (1 - p.seatPosition / 100));
+      const warm = !!p.heater.on;
+      svg.classList.toggle('warm', warm);
+      svg.querySelector('.heat-glow').style.opacity = warm ? 0.25 + p.heater.level * 0.18 : 0;
+      svg.classList.toggle('air-on', !!p.climate.on);
+      const col = p.climate.temp <= 21 ? 'var(--cool)' : p.climate.temp >= 25 ? 'var(--heat)' : 'var(--mild)';
+      const lines = Math.ceil((p.climate.fan * 3) / 5);
+      svg.querySelectorAll('.airline').forEach((el, i) => {
+        el.setAttribute('stroke', col);
+        el.style.opacity = i < lines ? 1 - i * 0.18 : 0.12;
+        el.style.animationDuration = (1.5 - p.climate.fan * 0.18).toFixed(2) + 's';
+      });
+      const t = svg.querySelector('.airtemp');
+      t.textContent = p.climate.temp + '°';
+      t.setAttribute('fill', col);
+      const glass = svg.querySelector('.glass');
+      const hgt = 114 * (1 - p.window.open / 100);
+      glass.setAttribute('y', 33 + (114 - hgt));
+      glass.setAttribute('height', Math.max(0, hgt));
+    }
+
+    /* ===================== 3D 좌석 장면 (three.js r128, WebGL) ===================== */
+    // 손그림처럼 차 안에서 내 자리를 비스듬히 바라보는 장면. 캔버스와 WebGL 컨텍스트는 하나만 만들어
+    // 화면이 다시 그려질 때마다 새 자리로 옮겨 붙인다. WebGL이 없거나 three.js를 못 불러오면 2D 좌석으로 대체한다.
+    const Seat3D = (() => {
+      const S = {
+        ok: false,
+        failed: false,
+        host: null,
+        raf: 0,
+        last: 0,
+        w: 0,
+        h: 0,
+        yaw: 0,
+        drag: null,
+        cur: null,
+        tgt: null,
+        caps: null,
+      };
+      const HEAT = 0x2f8cff;
+      // 색은 sRGB 값으로 적고 렌더러 계산용 선형 색으로 바꿔 쓴다(그대로 넣으면 색이 바래 보인다)
+      const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
+      function supported() {
+        if (window.__CARPOOM_FORCE_2D || !window.THREE) return false;
+        try {
+          const c = document.createElement('canvas');
+          return !!(c.getContext('webgl') || c.getContext('experimental-webgl'));
+        } catch (e) {
+          return false;
+        }
+      }
+      // 모서리가 둥근 상자. 격자를 모서리 쪽으로 몰아 둥근 부분을 매끈하게 만들고, 법선은 해석적으로 계산한다.
+      function rbox(w, h, d, r, seg) {
+        const T = THREE;
+        seg = seg || 16;
+        r = Math.min(r, w / 2 - 1e-3, h / 2 - 1e-3, d / 2 - 1e-3);
+        const g = new T.BoxGeometry(w, h, d, seg, seg, seg),
+          p = g.attributes.position,
+          n = g.attributes.normal;
+        const ix = w / 2 - r,
+          iy = h / 2 - r,
+          iz = d / 2 - r,
+          v = new T.Vector3(),
+          c = new T.Vector3();
+        const remap = (x, half, inner) => {
+          const t = x / half,
+            a = Math.abs(t),
+            s = Math.sign(t);
+          return s * (a <= 0.5 ? (a / 0.5) * inner : inner + ((a - 0.5) / 0.5) * (half - inner));
+        };
+        for (let i = 0; i < p.count; i++) {
+          v.set(remap(p.getX(i), w / 2, ix), remap(p.getY(i), h / 2, iy), remap(p.getZ(i), d / 2, iz));
+          c.set(Math.max(-ix, Math.min(ix, v.x)), Math.max(-iy, Math.min(iy, v.y)), Math.max(-iz, Math.min(iz, v.z)));
+          v.sub(c);
+          if (v.lengthSq() < 1e-12) v.set(0, 1, 0);
+          v.normalize();
+          n.setXYZ(i, v.x, v.y, v.z);
+          v.multiplyScalar(r).add(c);
+          p.setXYZ(i, v.x, v.y, v.z);
+        }
+        p.needsUpdate = true;
+        n.needsUpdate = true;
+        return g;
+      }
+      function mesh(geo, mat, x, y, z, parent) {
+        const m = new THREE.Mesh(geo, mat);
+        m.position.set(x, y, z);
+        m.castShadow = true;
+        m.receiveShadow = true;
+        parent.add(m);
+        return m;
+      }
+      function makeSeat(M, heated) {
+        const T = THREE,
+          seat = new T.Group(),
+          back = new T.Group();
+        const L = heated ? M.myLeather : M.leather; // 내 자리만 색 변화가 생기도록 재질을 따로 쓴다
+        // 받침, 다리
+        mesh(rbox(0.44, 0.07, 0.48, 0.02, 6), M.frame, 0, 0.115, 0, seat);
+        [
+          [-0.17, -0.17],
+          [0.17, -0.17],
+          [-0.17, 0.17],
+          [0.17, 0.17],
+        ].forEach(([x, z]) => mesh(rbox(0.045, 0.09, 0.06, 0.012, 4), M.frame, x, 0.055, z, seat));
+        // 방석: 본체 + 옆 지지대 + 가운데 패널(열선) + 블루 파이핑
+        mesh(rbox(0.54, 0.12, 0.56, 0.05), L, 0, 0.21, 0, seat);
+        mesh(rbox(0.1, 0.1, 0.52, 0.045), L, -0.232, 0.29, 0, seat);
+        mesh(rbox(0.1, 0.1, 0.52, 0.045), L, 0.232, 0.29, 0, seat);
+        mesh(rbox(0.35, 0.03, 0.48, 0.013, 10), M.pipe, 0, 0.268, 0.015, seat);
+        const cIns = mesh(rbox(0.33, 0.05, 0.46, 0.022), heated ? M.heatIns : M.insert, 0, 0.282, 0.015, seat);
+        // 등받이: 방석 뒤쪽 위의 힌지(0, .27, -.25)를 기준으로 회전
+        back.position.set(0, 0.27, -0.25);
+        seat.add(back);
+        mesh(rbox(0.52, 0.66, 0.13, 0.05), L, 0, 0.34, -0.02, back);
+        mesh(rbox(0.1, 0.6, 0.14, 0.045), L, -0.222, 0.33, 0.012, back);
+        mesh(rbox(0.1, 0.6, 0.14, 0.045), L, 0.222, 0.33, 0.012, back);
+        mesh(rbox(0.325, 0.535, 0.03, 0.013, 10), M.pipe, 0, 0.355, 0.036, back);
+        const bIns = mesh(rbox(0.31, 0.52, 0.05, 0.022), heated ? M.heatIns : M.insert, 0, 0.355, 0.045, back);
+        [-0.065, 0.065].forEach((x) =>
+          mesh(new T.CylinderGeometry(0.009, 0.009, 0.12, 10), M.rail, x, 0.71, -0.02, back),
+        );
+        mesh(rbox(0.28, 0.19, 0.11, 0.05), L, 0, 0.8, -0.015, back);
+        mesh(rbox(0.16, 0.012, 0.02, 0.005, 4), M.pipe, 0, 0.86, 0.04, back);
+        return { seat, back, cIns, bIns };
+      }
+      function floorTexture() {
+        const c = document.createElement('canvas');
+        c.width = c.height = 256;
+        const g = c.getContext('2d');
+        const r = g.createRadialGradient(128, 128, 10, 128, 128, 128);
+        r.addColorStop(0, 'rgba(255,255,255,1)');
+        r.addColorStop(0.6, 'rgba(255,255,255,.85)');
+        r.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = r;
+        g.fillRect(0, 0, 256, 256);
+        return new THREE.CanvasTexture(c);
+      }
+      function build() {
+        const T = THREE;
+        const canvas = document.createElement('canvas');
+        canvas.className = 'seat3d';
+        canvas.setAttribute('role', 'img');
+        canvas.setAttribute(
+          'aria-label',
+          '차 안에서 내 자리를 옆에서 본 3D 비주얼. 내 좌석만 또렷하고 나머지는 반투명해요.',
+        );
+        const renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'low-power' });
+        renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+        renderer.outputEncoding = T.sRGBEncoding;
+        renderer.toneMapping = T.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = T.PCFSoftShadowMap;
+        // 좌석은 '딱 옆모습'으로 본다. 원근 없는 정사영 카메라로 정측면을 고정해서 본다(돌리기 없음)
+        const scene = new T.Scene(),
+          camera = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 30);
+        scene.add(new T.HemisphereLight(0xffffff, lin(0x7d8ba0), 0.65));
+        const key = new T.DirectionalLight(0xffffff, 1.55);
+        key.position.set(-2.4, 3.4, 1.6);
+        key.castShadow = true;
+        key.shadow.mapSize.set(1024, 1024);
+        Object.assign(key.shadow.camera, { left: -1.6, right: 1.6, top: 1.6, bottom: -1.6, near: 0.5, far: 9 });
+        key.shadow.bias = -0.0006;
+        key.shadow.radius = 5;
+        scene.add(key);
+        const fill = new T.DirectionalLight(lin(0xcfe0ff), 0.5);
+        fill.position.set(-1.6, 1.0, -2.2);
+        scene.add(fill);
+        const rim = new T.DirectionalLight(0xffffff, 0.7);
+        rim.position.set(2.0, 2.4, -0.6);
+        scene.add(rim);
+        const M = {
+          leather: new T.MeshPhysicalMaterial({
+            color: lin(0xd9dfe8),
+            roughness: 0.55,
+            metalness: 0,
+            clearcoat: 0.25,
+            clearcoatRoughness: 0.5,
+          }),
+          myLeather: new T.MeshPhysicalMaterial({
+            color: lin(0xd9dfe8),
+            roughness: 0.55,
+            metalness: 0,
+            clearcoat: 0.25,
+            clearcoatRoughness: 0.5,
+          }),
+          insert: new T.MeshPhysicalMaterial({ color: lin(0xe6eaf0), roughness: 0.75, clearcoat: 0.05 }),
+          heatIns: new T.MeshPhysicalMaterial({
+            color: lin(0xeef1f5),
+            roughness: 0.6,
+            clearcoat: 0.1,
+            clearcoatRoughness: 0.35,
+            emissive: lin(HEAT),
+            emissiveIntensity: 0,
+          }),
+          vent: new T.MeshStandardMaterial({ color: lin(0x1b2430), emissive: lin(0x2f86e8), emissiveIntensity: 0 }),
+          pipe: new T.MeshStandardMaterial({ color: lin(0x002c5f), roughness: 0.4 }),
+          frame: new T.MeshStandardMaterial({ color: lin(0x2a3340), roughness: 0.5, metalness: 0.25 }),
+          rail: new T.MeshStandardMaterial({ color: lin(0xb4bdc8), roughness: 0.28, metalness: 0.8 }),
+          door: new T.MeshStandardMaterial({ color: lin(0xcbd5e2), roughness: 0.6 }), // 옆모습에서 흰 좌석이 묻히지 않도록 문짝은 한 톤 어둡게
+          trim: new T.MeshStandardMaterial({ color: lin(0xb9c3d0), roughness: 0.55 }),
+          ambient: new T.MeshStandardMaterial({
+            color: lin(0x5aa6f0),
+            emissive: lin(0x2f86e8),
+            emissiveIntensity: 2.2,
+          }),
+          glass: new T.MeshPhysicalMaterial({
+            color: lin(0x7fb8e6),
+            roughness: 0.04,
+            metalness: 0,
+            transparent: true,
+            opacity: 0.55,
+            clearcoat: 1,
+            depthWrite: false,
+          }),
+          floor: new T.MeshStandardMaterial({
+            color: lin(0xc7d0dc),
+            roughness: 0.95,
+            transparent: true,
+            alphaMap: floorTexture(),
+            depthWrite: false,
+          }),
+        };
+        // 색 변화 기준: 흰 패널 → 따뜻한 살구색(열선), 온도별 바람 색(공조)
+        Object.assign(S, {
+          baseIns: lin(0xeef1f5),
+          warmIns: lin(0x5aaeff),
+          baseLeather: lin(0xd9dfe8),
+          warmLeather: lin(0xcfe3ff),
+          ambBase: lin(0x2f86e8),
+          airCool: lin(0x3fa6ff),
+          airMild: lin(0x2f86e8),
+          airWarm: lin(0xff9e5e),
+          tintCool: lin(0xcfe2f7),
+          tintMild: lin(0xd6e2f2),
+          tintWarm: lin(0xf1dfd2),
+        });
+        // ===== 차 실내(반투명 엑스레이) + 내 좌석만 또렷하게 =====
+        // 비율은 아이오닉 6 제원(전장 4,855mm, 축거 2,950mm, 전고 1,495mm)을 따른다. 1단위 ≈ 1m
+        // 좌표: z = 앞(+), x = 왼쪽(+, 운전석 쪽), y = 위. 실내 바닥 y=0, 땅 y=-0.24
+        renderer.localClippingEnabled = true;
+        Object.assign(M, {
+          shell: new T.MeshStandardMaterial({
+            color: lin(0x8ba2c0),
+            roughness: 0.6,
+            transparent: true,
+            opacity: 0.05,
+            depthWrite: false,
+            side: T.DoubleSide,
+          }),
+          ghost: new T.MeshStandardMaterial({
+            color: lin(0x8ba2c0),
+            roughness: 0.6,
+            transparent: true,
+            opacity: 0.12,
+            depthWrite: false,
+            side: T.DoubleSide,
+          }),
+          ghostSeat: new T.MeshStandardMaterial({
+            color: lin(0xa3b5cc),
+            roughness: 0.6,
+            transparent: true,
+            opacity: 0.18,
+            depthWrite: false,
+          }),
+          line: new T.LineBasicMaterial({ color: lin(0x6a84a8), transparent: true, opacity: 0.5, depthWrite: false }),
+          glassG: new T.MeshPhysicalMaterial({
+            color: lin(0x8ec5f0),
+            roughness: 0.05,
+            transparent: true,
+            opacity: 0.14,
+            depthWrite: false,
+            side: T.DoubleSide,
+          }),
+          myGlass: new T.MeshPhysicalMaterial({
+            color: lin(0x7fb8e6),
+            roughness: 0.05,
+            transparent: true,
+            opacity: 0.2,
+            depthWrite: false,
+            side: T.DoubleSide,
+            clippingPlanes: [new T.Plane(new T.Vector3(0, 1, 0), -0.79)],
+          }),
+          screen: new T.MeshStandardMaterial({ color: lin(0x0b1220), emissive: lin(0x2f8cff), emissiveIntensity: 1.1 }),
+        });
+        const car = new T.Group();
+        scene.add(car);
+        const edgesOf = (m, angle) => {
+          const e = new T.LineSegments(new T.EdgesGeometry(m.geometry, angle || 25), M.line);
+          e.position.copy(m.position);
+          e.rotation.copy(m.rotation);
+          e.renderOrder = 3;
+          m.parent.add(e);
+          return e;
+        };
+        const ghost = (geo, mat, x, y, z, edges) => {
+          const m = new T.Mesh(geo, mat || M.ghost);
+          m.position.set(x, y, z);
+          m.renderOrder = 2;
+          car.add(m);
+          if (edges !== false) edgesOf(m);
+          return m;
+        };
+        const side = (shape) => {
+          const g = new T.ShapeGeometry(shape);
+          g.rotateY(-Math.PI / 2);
+          return g;
+        }; // (z, y) 옆모습 도형 → 세운 판
+        // 차체 옆모습: 아이오닉 6(스트림라이너). 앞 오버행이 짧고, 앞유리부터 덕테일 스포일러까지 한 줄의 아치형 지붕이 이어진다
+        const ROOF_R = [
+          [-2.555, 0.735],
+          [-1.95, 0.97],
+          [-1.05, 1.27],
+          [-0.2, 1.255],
+        ]; // 덕테일 → 지붕 꼭대기(지면에서 1.495m)
+        const ROOF_F = [
+          [-0.2, 1.255],
+          [0.45, 1.25],
+          [0.95, 1.0],
+          [1.3, 0.76],
+        ]; // 지붕 꼭대기 → 앞유리 아래
+        const sh = new T.Shape();
+        sh.moveTo(-2.48, -0.06);
+        [
+          [-2.55, 0.08],
+          [-2.555, 0.46],
+          [-2.53, 0.66],
+          [-2.555, 0.735],
+        ].forEach(([u, v]) => sh.lineTo(u, v));
+        sh.bezierCurveTo(...ROOF_R[1], ...ROOF_R[2], ...ROOF_R[3]); // 지붕 뒤쪽(덕테일까지 내려옴)
+        sh.bezierCurveTo(...ROOF_F[1], ...ROOF_F[2], ...ROOF_F[3]); // 지붕 앞쪽과 앞유리
+        sh.quadraticCurveTo(1.86, 0.66, 2.22, 0.44);
+        sh.lineTo(2.3, 0.22);
+        sh.lineTo(2.26, -0.06);
+        sh.lineTo(-2.48, -0.06); // 낮은 보닛과 앞 범퍼(전장 4.855m)
+        const shellGeo = new T.ExtrudeGeometry(sh, { depth: 1.8, bevelEnabled: false, curveSegments: 28 });
+        shellGeo.translate(0, 0, -0.9);
+        shellGeo.rotateY(-Math.PI / 2);
+        const shell = ghost(shellGeo, M.shell, 0, 0, 0, false);
+        edgesOf(shell, 30);
+        // 바퀴(축거 2.950m)
+        [1.475, -1.475].forEach((z) =>
+          [0.8, -0.8].forEach((x) => {
+            const g = new T.CylinderGeometry(0.34, 0.34, 0.2, 40, 1);
+            g.rotateZ(Math.PI / 2);
+            const w = ghost(g, M.shell, x, 0.1, z, x < 0);
+            w.visible = false;
+          }),
+        ); // 바퀴는 외곽선만
+        // 옆 창문은 지붕선을 따라 만든다(지붕선에서 0.075m 아래, 벨트라인 0.80m 위). 카메라 쪽(x<0) 내 줄 창문은 창문 설정에 따라 내려간다
+        const bez = (P) => new T.CubicBezierCurve(...P.map(([u, v]) => new T.Vector2(u, v)));
+        const roofPts = [...bez(ROOF_R).getPoints(80), ...bez(ROOF_F).getPoints(80)];
+        const roofAt = (z) => {
+          for (let i = 1; i < roofPts.length; i++) {
+            const a = roofPts[i - 1],
+              b = roofPts[i];
+            if (a.x !== b.x && (z - a.x) * (z - b.x) <= 0) return a.y + ((b.y - a.y) * (z - a.x)) / (b.x - a.x);
+          }
+          return 0;
+        };
+        const BELT = 0.8,
+          INSET = 0.075,
+          PILLAR = 0.07;
+        const edgeZ = (from, step) => {
+          let z = from;
+          while (roofAt(z + step) - INSET > BELT + 0.02) z += step;
+          return z;
+        };
+        const zWinFront = edgeZ(0, 0.005) - PILLAR,
+          zWinRear = edgeZ(-0.4, -0.005) + 0.02;
+        const winShape = (z0, z1) => {
+          const s = new T.Shape();
+          s.moveTo(z0, BELT);
+          const n = 28;
+          for (let i = 0; i <= n; i++) {
+            const z = z0 + ((z1 - z0) * i) / n;
+            s.lineTo(z, Math.max(BELT + 0.02, roofAt(z) - INSET));
+          }
+          s.lineTo(z1, BELT);
+          s.lineTo(z0, BELT);
+          return s;
+        };
+        const winF = winShape(-0.3, zWinFront),
+          winR = winShape(zWinRear, -0.36);
+        ghost(side(winF), M.glassG, 0.88, 0, 0, false);
+        ghost(side(winR), M.glassG, 0.88, 0, 0, false);
+        const glassFront = ghost(side(winF), M.glassG, -0.88, 0, 0, false),
+          glassRear = ghost(side(winR), M.glassG, -0.88, 0, 0, false);
+        edgesOf(ghost(side(winF), M.shell, -0.89, 0, 0, false));
+        edgesOf(ghost(side(winR), M.shell, -0.89, 0, 0, false)); // 창틀 선(고정)
+        // 사이드미러(앞문 앞쪽 위): 차 앞이 오른쪽임을 바로 알 수 있게
+        ghost(rbox(0.1, 0.11, 0.2, 0.04, 6), M.ghost, -0.98, 0.86, 0.93);
+        // B필러, 문 선(카메라 쪽)
+        ghost(rbox(0.05, 0.4, 0.07, 0.02, 4), M.ghost, -0.88, 0.99, -0.33);
+        const doorPts = [
+          [1.05, 0.06, 1.05, 0.79],
+          [-0.33, 0.06, -0.33, 0.79],
+          [-1.48, 0.14, -1.48, 0.79],
+          [-1.48, 0.06, 1.05, 0.06],
+          [zWinRear, 0.79, zWinFront + PILLAR, 0.79],
+        ];
+        const dp = [];
+        doorPts.forEach(([z0, y0, z1, y1]) => {
+          dp.push(-0.9, y0, z0, -0.9, y1, z1);
+        });
+        const doorGeo = new T.BufferGeometry();
+        doorGeo.setAttribute('position', new T.Float32BufferAttribute(dp, 3));
+        const doorLines = new T.LineSegments(doorGeo, M.line);
+        doorLines.renderOrder = 3;
+        car.add(doorLines);
+        // 대시보드, 핸들(운전석), 센터 콘솔, 바닥
+        ghost(rbox(1.62, 0.34, 0.52, 0.1, 6), M.ghost, 0, 0.63, 0.94);
+        const wheel = new T.Mesh(new T.TorusGeometry(0.18, 0.022, 12, 48), M.ghost);
+        wheel.position.set(0.38, 0.84, 0.6);
+        wheel.rotation.x = -0.42;
+        wheel.renderOrder = 2;
+        car.add(wheel);
+        edgesOf(wheel, 40);
+        const col = ghost(new T.CylinderGeometry(0.03, 0.03, 0.34, 12), M.ghost, 0.38, 0.74, 0.76, false);
+        col.rotation.x = 1.15;
+        ghost(rbox(0.24, 0.4, 0.95, 0.06, 6), M.ghost, 0, 0.2, 0.18);
+        ghost(rbox(1.64, 0.04, 3.1, 0.02, 4), M.ghost, 0, -0.02, -0.32, false);
+        // 무드등(건너편 문 안쪽) — 공조 색을 따라 은은하게 바뀐다
+        mesh(rbox(0.012, 0.012, 2.2, 0.006, 4), M.ambient, 0.84, 0.66, -0.22, car).castShadow = false;
+        // 좌석: 내 좌석은 불투명, 나머지는 반투명
+        // 좌석은 실제 크기에 맞춰 0.84배(머리받침 꼭대기 ≈ 실내 바닥에서 0.96m), 뒷줄은 조금 앞으로
+        const SEATS = {
+            FL: { x: 0.38, z: 0 },
+            FR: { x: -0.38, z: 0 },
+            RL: { x: 0.38, z: -0.86 },
+            RR: { x: -0.38, z: -0.86 },
+          },
+          SEAT_SCALE = 0.84;
+        const ghosts = {};
+        Object.keys(SEATS).forEach((id) => {
+          const g = makeSeat(M, false);
+          g.seat.position.set(SEATS[id].x, 0, SEATS[id].z);
+          g.seat.scale.setScalar(SEAT_SCALE);
+          if (id[0] === 'R') g.back.rotation.x = -0.22;
+          g.seat.traverse((o) => {
+            if (o.isMesh) {
+              o.material = M.ghostSeat;
+              o.castShadow = false;
+              o.receiveShadow = false;
+              o.renderOrder = 2;
+            }
+          });
+          car.add(g.seat);
+          ghosts[id] = g.seat;
+        });
+        const mine = makeSeat(M, true);
+        mine.seat.scale.setScalar(SEAT_SCALE);
+        scene.add(mine.seat);
+        const rails = new T.Group();
+        scene.add(rails);
+        [-0.17, 0.17].forEach((x) => mesh(rbox(0.04, 0.025, 1.0, 0.01, 4), M.rail, x, 0.0125, 0, rails));
+        const catcher = new T.Mesh(new T.PlaneGeometry(1.1, 1.3), new T.ShadowMaterial({ opacity: 0.24 }));
+        catcher.rotation.x = -Math.PI / 2;
+        catcher.position.y = 0.002;
+        catcher.receiveShadow = true;
+        scene.add(catcher);
+        // 송풍구(앞줄은 대시보드, 뒷줄은 콘솔 뒤) — 공조가 켜지면 빛난다
+        const vent = mesh(rbox(0.18, 0.05, 0.03, 0.012, 4), M.vent, -0.38, 0.76, 0.69, scene);
+        vent.castShadow = false;
+        scene.add(key.target);
+        Object.assign(S, {
+          renderer,
+          scene,
+          camera,
+          canvas,
+          M,
+          mine,
+          ghosts,
+          rails,
+          catcher,
+          glassFront,
+          glassRear,
+          vent,
+          key,
+          SEATS,
+          sid: null,
+          base: SEATS.FR,
+          zc: 0.05,
+          glass: glassFront,
+        });
+        // 시점은 정측면으로 고정한다(끌어서 돌리기 없음).
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') schedule();
+        });
+      }
+      // 다크 모드에서는 반투명 차 실내 색을 바꾼다(내 좌석은 밝은 가죽 그대로)
+      function applyTheme() {
+        const root = document.documentElement,
+          dark =
+            root.dataset.theme === 'dark' ||
+            (root.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        if (S.dark === dark) return;
+        S.dark = dark;
+        const M = S.M;
+        M.ghost.color.copy(lin(dark ? 0x9db8dc : 0x8ba2c0));
+        M.ghost.opacity = dark ? 0.09 : 0.12;
+        M.shell.color.copy(lin(dark ? 0x9db8dc : 0x8ba2c0));
+        M.ghostSeat.color.copy(lin(dark ? 0x8fa6c4 : 0xa3b5cc));
+        M.ghostSeat.opacity = dark ? 0.14 : 0.18;
+        M.line.color.copy(lin(dark ? 0x7fa6d6 : 0x6a84a8));
+        M.line.opacity = dark ? 0.42 : 0.5;
+        M.glassG.opacity = dark ? 0.1 : 0.14;
+      }
+      function init() {
+        if (S.ok || S.failed) return S.ok;
+        if (!supported()) {
+          S.failed = true;
+          return false;
+        }
+        try {
+          build();
+          S.ok = true;
+        } catch (e) {
+          S.failed = true;
+        }
+        return S.ok;
+      }
+      function targetsFrom(p, caps) {
+        caps = caps || {};
+        return {
+          recline: ((6 + p.recline * 0.34) * Math.PI) / 180,
+          z: ((50 - p.seatPosition) / 100) * 0.34,
+          heat: caps.heater !== false && p.heater.on ? 0.25 + p.heater.level * 0.17 : 0,
+          air: caps.climate !== false && p.climate.on ? p.climate.fan / 5 : 0,
+          temp: p.climate.temp,
+          win: caps.window !== false ? p.window.open / 100 : 0,
+        };
+      }
+      function layout(sid) {
+        sid = S.SEATS[sid] ? sid : 'FR';
+        if (S.sid === sid) return;
+        S.sid = sid;
+        const P = S.SEATS[sid],
+          row = sid[0];
+        S.base = P;
+        S.mine.seat.position.x = P.x;
+        S.rails.position.set(P.x, 0, P.z);
+        S.catcher.position.set(P.x, 0.002, P.z);
+        // 내 좌석을 가리는 같은 줄 카메라 쪽 좌석은 숨긴다
+        Object.keys(S.ghosts).forEach((id) => {
+          const q = S.SEATS[id];
+          S.ghosts[id].visible = id !== sid && !(id[0] === row && q.x < P.x);
+        });
+        S.glassFront.material = row === 'F' ? S.M.myGlass : S.M.glassG;
+        S.glassRear.material = row === 'R' ? S.M.myGlass : S.M.glassG;
+        S.glassFront.position.y = 0;
+        S.glassRear.position.y = 0;
+        S.glass = row === 'F' ? S.glassFront : S.glassRear;
+        if (row === 'F') S.vent.position.set(P.x, 0.76, 0.69);
+        else S.vent.position.set(P.x * 0.3, 0.4, -0.3);
+        S.key.target.position.set(P.x, 0.5, P.z);
+        S.zc = -0.42;
+        S.w = 0; // 앞줄, 뒷줄 모두 같은 화면: 왼쪽 뒷유리 ~ 오른쪽 대시보드
+      }
+      function setState(p, caps) {
+        if (!S.ok) return;
+        layout(p.seatId);
+        S.tgt = targetsFrom(p, caps);
+        if (!S.cur) S.cur = Object.assign({}, S.tgt);
+        schedule();
+      }
+      function mount(host) {
+        if (!init()) return false;
+        S.host = host;
+        host.appendChild(S.canvas);
+        S.w = 0;
+        resize();
+        schedule();
+        return true;
+      }
+      function resize() {
+        if (!S.host) return;
+        const w = S.host.clientWidth,
+          h = S.host.clientHeight;
+        if (!w || !h) return;
+        if (w !== S.w || h !== S.h) {
+          S.w = w;
+          S.h = h;
+          S.renderer.setSize(w, h, false);
+          const a = w / h;
+          let vw = 3.35,
+            vh = vw / a;
+          if (vh < 1.7) {
+            vh = 1.7;
+            vw = vh * a;
+          }
+          Object.assign(S.camera, { left: -vw / 2, right: vw / 2, top: vh / 2, bottom: -vh / 2 });
+          S.camera.updateProjectionMatrix();
+        }
+      }
+      function schedule() {
+        if (S.ok && !S.raf && S.host && S.host.isConnected && document.visibilityState !== 'hidden')
+          S.raf = requestAnimationFrame(frame);
+      }
+      // 열선, 공조는 입자 없이 색으로만 보여 준다: 흰 좌석에 색이 서서히 번지고, 은은하게 반짝인다
+      function applyComfort(c, t) {
+        const M = S.M,
+          heatK = Math.min(1, c.heat / 0.76),
+          airK = Math.min(1, c.air);
+        const glow = 0.5 + 0.5 * Math.sin(t * 2.2); // 열선: 숨 쉬듯 천천히 밝아졌다 어두워짐
+        M.heatIns.color.copy(S.baseIns).lerp(S.warmIns, heatK);
+        M.heatIns.emissiveIntensity = c.heat * (0.35 + 0.3 * glow);
+        M.heatIns.clearcoat = 0.1 + 0.45 * heatK * glow; // 살짝 반짝이는 광택
+        const airCol = c.temp <= 21 ? S.airCool : c.temp >= 25 ? S.airWarm : S.airMild;
+        const tint = c.temp <= 21 ? S.tintCool : c.temp >= 25 ? S.tintWarm : S.tintMild;
+        const pulse = 0.5 + 0.5 * Math.sin(t * (1.1 + airK * 1.8)); // 바람 세기가 셀수록 조금 빠르게
+        M.myLeather.color
+          .copy(S.baseLeather)
+          .lerp(tint, airK * (0.45 + 0.25 * pulse))
+          .lerp(S.warmLeather, heatK * 0.3);
+        M.vent.emissive.copy(airCol);
+        M.vent.emissiveIntensity = airK > 0.01 ? (0.8 + airK * 1.6) * (0.65 + 0.35 * pulse) : 0;
+        M.ambient.emissive.copy(S.ambBase).lerp(airCol, Math.min(1, airK * 1.4));
+      }
+      function frame(now) {
+        S.raf = 0;
+        if (!S.host || !S.host.isConnected) return;
+        resize();
+        const dt = Math.min(0.05, S.last ? (now - S.last) / 1000 : 0.016);
+        S.last = now;
+        const t = now / 1000;
+        const c = S.cur,
+          g = S.tgt;
+        let moving = false;
+        if (c && g) {
+          const k = Math.min(1, dt * 7);
+          ['recline', 'z', 'heat', 'air', 'win'].forEach((key) => {
+            const d = g[key] - c[key];
+            if (Math.abs(d) > 1e-4) {
+              c[key] += d * k;
+              moving = true;
+            } else c[key] = g[key];
+          });
+          c.temp = g.temp;
+          S.mine.back.rotation.x = -c.recline;
+          S.mine.seat.position.z = S.base.z + c.z;
+          S.glass.position.y = -c.win * 0.38;
+          applyComfort(c, t);
+        }
+        // 카메라: 좌석을 옆에서 본다(등받이 각도가 한눈에 보이는 측면). 살짝 위에서 내려다보고, 끌면 조금만 돌아간다.
+        // 화면이 좁으면 좌우가, 넓으면 위아래가 잘리지 않도록 거리를 늘린다
+        // 정측면: 차 오른쪽(조수석 쪽)에서 수평으로 본다. 차 앞이 화면 오른쪽
+        S.camera.position.set(-6, 0.52, S.zc);
+        S.camera.lookAt(0, 0.52, S.zc);
+        applyTheme();
+        S.renderer.render(S.scene, S.camera);
+        const animating = moving || (c && (c.heat > 0.01 || c.air > 0.01));
+        if (animating) schedule();
+      }
+      // 테스트용: 실제로 그려졌는지(투명이 아닌 픽셀이 있는지) 확인
+      function probe() {
+        if (!S.ok) return { ok: false };
+        S.renderer.render(S.scene, S.camera);
+        const gl = S.renderer.getContext(),
+          w = gl.drawingBufferWidth,
+          h = gl.drawingBufferHeight,
+          px = new Uint8Array(4);
+        let filled = 0;
+        for (let i = 1; i <= 9; i++) {
+          for (let j = 1; j <= 9; j++) {
+            gl.readPixels(Math.floor((w * i) / 10), Math.floor((h * j) / 10), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+            if (px[3] > 0) filled++;
+          }
+        }
+        return { ok: true, filled, of: 81, w, h, target: S.tgt };
+      }
+      window.addEventListener('resize', () => {
+        S.w = 0;
+        schedule();
+      });
+      return {
+        mount,
+        setState,
+        probe,
+        get ok() {
+          return S.ok;
+        },
+        get failed() {
+          return S.failed;
+        },
+      };
+    })();
+    function mountSeat(root, p, caps) {
+      if (!root) return;
+      if (Seat3D.mount(root)) {
+        root.dataset.mode = '3d';
+        // 홈의 좌석은 누르면 내 자리 설정으로 간다는 안내를 처음 한 번만 보여 준다
+        if (!ui.hintShown && root.id === 'home-seat') {
+          ui.hintShown = true;
+          root.insertAdjacentHTML('beforeend', '<span class="stage-hint">좌석을 누르면 내 자리 설정</span>');
+          setTimeout(() => {
+            document.querySelectorAll('.stage-hint').forEach((e) => e.remove());
+          }, 6000);
+        }
+      } else {
+        root.dataset.mode = '2d';
+        root.innerHTML = seatSVG(p, caps);
+      }
+      updateSeatVisual(root, p, caps);
+    }
+
+    /* ===================== 좌석 선택 (평면) ===================== */
+    function seatPickSVG(vehicle, selectedId, disabled, taken) {
+      taken = taken || {};
+      const pos = { FR: { x: 112, y: 46 }, RL: { x: 30, y: 128 }, RR: { x: 112, y: 128 } };
+      const btn = (id, label) => {
+        const s = pos[id];
+        const sel = selectedId === id;
+        const tk = !!taken[id] && !sel;
+        if (!vehicle.seats.some((x) => x.id === id)) return '';
+        return `<g class="seatbtn ${tk ? 'taken' : ''}" data-action="${disabled || tk ? '' : 'pickSeat'}" data-seat="${id}" role="button" aria-disabled="${disabled || tk ? 'true' : 'false'}" aria-label="${label}${sel ? ' 선택됨' : tk ? ' 이미 예약됨' : ''}" opacity="${tk ? 0.45 : 1}">
+      <rect x="${s.x}" y="${s.y}" width="58" height="66" rx="18" fill="${sel ? 'var(--accent)' : 'var(--surface-2)'}"/>
+      <rect x="${s.x + 8}" y="${s.y + 7}" width="42" height="18" rx="9" fill="${sel ? 'var(--accent-fg)' : 'var(--surface-3)'}" opacity="${sel ? 0.35 : 1}"/>
+      <text x="${s.x + 29}" y="${s.y + 50}" font-size="12" text-anchor="middle" font-weight="700" fill="${sel ? 'var(--accent-fg)' : 'var(--muted)'}">${tk ? '예약됨' : label}</text>
+    </g>`;
+      };
+      return `<div class="seatpick"><svg viewBox="0 0 200 212" role="group" aria-label="좌석 선택">
+    <rect x="10" y="10" width="180" height="196" rx="46" fill="var(--surface)" stroke="var(--line)" stroke-width="3"/>
+    <rect x="30" y="46" width="58" height="66" rx="18" fill="var(--surface-2)" opacity=".7"/>
+    <circle cx="59" cy="70" r="12" fill="none" stroke="var(--muted)" stroke-width="3"/><text x="59" y="100" font-size="11" text-anchor="middle" fill="var(--muted)">운전석</text>
+    ${btn('FR', '조수석')}${btn('RL', '뒤 왼쪽')}${btn('RR', '뒤 오른쪽')}
+  </svg></div>`;
+    }
+
+    /* ===================== 실제 지도 (MapLibre GL + OpenFreeMap 벡터 타일) ===================== */
+    // 지도 요소와 WebGL 컨텍스트는 하나만 만들어, 화면이 다시 그려질 때 새 자리(.mapslot)로 옮겨 붙인다.
+    // MapLibre를 못 쓰면(오프라인, WebGL 없음) 같은 좌표를 단순하게 그리는 캔버스 지도로 대체한다.
+    const PIN_SVG = (color, glyph) =>
+      `<svg class="mk-pin" viewBox="0 0 34 44" aria-hidden="true"><path d="M17 43C17 43 3 27 3 16.5A14 14 0 0 1 31 16.5C31 27 17 43 17 43Z" fill="${color}" stroke="#fff" stroke-width="2.5"/><circle cx="17" cy="16.5" r="6.5" fill="#fff"/>${glyph ? `<text x="17" y="21" font-size="10" font-weight="800" text-anchor="middle" fill="${color}">${glyph}</text>` : ''}</svg>`;
+    // 차량이 예약 상태에 맞춰 도로를 따라 가는 거리(m). 수락=경로 중간쯤, 50m 접근=탑승 위치 40m 앞, 도착=탑승 위치
+    function carTargetDist(status, len) {
+      if (status === 'REQUESTED') return 0;
+      if (status === 'ACCEPTED') return Math.max(0, Math.min(len * 0.5, len - 150));
+      if (status === 'APPROACHING') return Math.max(0, len - 40);
+      if (status === 'ARRIVED' || status === 'COMPLETED') return len;
+      return null;
+    }
+    const GeoMap = (() => {
+      const S = {
+        map: null,
+        el: null,
+        failed: false,
+        ready: false,
+        style: null,
+        markers: {},
+        mode: null,
+        data: {},
+        onPick: null,
+        fitKey: null,
+        car: null,
+        anim: 0,
+        fb: null,
+        live: null,
+        liveFit: null,
+      };
+      const empty = { type: 'FeatureCollection', features: [] };
+      const line = (coords) => ({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: coords },
+        properties: {},
+      });
+      const poly = (coords) => ({
+        type: 'Feature',
+        geometry: { type: 'Polygon', coordinates: [coords] },
+        properties: {},
+      });
+      function webgl() {
+        if (window.__CARPOOM_FORCE_2D) return false;
+        try {
+          const c = document.createElement('canvas');
+          return !!(c.getContext('webgl2') || c.getContext('webgl'));
+        } catch (e) {
+          return false;
+        }
+      }
+      const styleKey = () => (isDark() ? 'dark' : 'light');
+      function ensure() {
+        if (S.map) return true;
+        if (S.failed) return false;
+        if (!window.maplibregl || !webgl()) {
+          S.failed = true;
+          return false;
+        }
+        S.el = document.createElement('div');
+        S.el.className = 'mapgl';
+        try {
+          S.style = styleKey();
+          S.map = new maplibregl.Map({
+            container: S.el,
+            style: GEO.STYLE[S.style],
+            center: [GEO.CENTER.lng, GEO.CENTER.lat],
+            zoom: 14.4,
+            attributionControl: { compact: true },
+            dragRotate: false,
+            pitchWithRotate: false,
+            touchPitch: false,
+            fadeDuration: 0,
+          });
+          S.map.touchZoomRotate.disableRotation();
+          S.map.on('style.load', () => {
+            S.ready = true;
+            S.routeAt = 0;
+            S.ringKey = null;
+            addLayers();
+            apply();
+          });
+          S.map.on('click', (e) => {
+            if (S.mode === 'pick' && S.onPick) S.onPick({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+          });
+          S.map.on('error', () => {
+            /* 일부 타일 오류는 무시 */
+          });
+        } catch (e) {
+          S.failed = true;
+          S.map = null;
+          return false;
+        }
+        return true;
+      }
+      function addLayers() {
+        const m = S.map,
+          dark = S.style === 'dark';
+        if (dark) GEO.tuneDarkMap(m);
+        // 지도 글자를 한국어 이름으로(없으면 기본 이름)
+        // 지도 글씨를 한국어 이름으로. 도로를 따라 붙는 이름은 한글만 세로로 서고 숫자는 눕는 문제가 있어 화면 기준 가로로 쓴다
+        m.getStyle().layers.forEach((l) => {
+          if (
+            l.type === 'symbol' &&
+            l.layout &&
+            l.layout['text-field'] &&
+            JSON.stringify(l.layout['text-field']).includes('name')
+          ) {
+            /* 이름 글씨층만(도로 번호 표지판은 그대로) */ try {
+              m.setLayoutProperty(l.id, 'text-field', ['coalesce', ['get', 'name:ko'], ['get', 'name']]);
+            } catch (e) {}
+          }
+        });
+        ['route', 'ring'].forEach((id) => {
+          if (!m.getSource(id)) m.addSource(id, { type: 'geojson', data: empty });
+        });
+        if (!m.getLayer('ring-fill'))
+          m.addLayer({
+            id: 'ring-fill',
+            type: 'fill',
+            source: 'ring',
+            paint: { 'fill-color': '#3D9BEA', 'fill-opacity': 0.14 },
+          });
+        if (!m.getLayer('ring-line'))
+          m.addLayer({
+            id: 'ring-line',
+            type: 'line',
+            source: 'ring',
+            paint: { 'line-color': '#3D9BEA', 'line-width': 2, 'line-dasharray': [2, 2] },
+          });
+        if (!m.getLayer('route-casing'))
+          m.addLayer({
+            id: 'route-casing',
+            type: 'line',
+            source: 'route',
+            layout: { 'line-cap': 'round', 'line-join': 'round' },
+            paint: { 'line-color': dark ? '#0B0D10' : '#FFFFFF', 'line-width': 10 },
+          });
+        if (!m.getLayer('route-line'))
+          m.addLayer({
+            id: 'route-line',
+            type: 'line',
+            source: 'route',
+            layout: { 'line-cap': 'round', 'line-join': 'round' },
+            paint: { 'line-color': dark ? '#3D9BEA' : '#0E72AF', 'line-width': 5.5 },
+          });
+      }
+      function marker(key, html, ll, rot) {
+        if (!ll) {
+          if (S.markers[key]) {
+            S.markers[key].remove();
+            delete S.markers[key];
+          }
+          return;
+        }
+        let mk = S.markers[key];
+        if (!mk || mk._html !== html) {
+          if (mk) mk.remove();
+          const el = document.createElement('div');
+          el.innerHTML = html;
+          mk = new maplibregl.Marker({
+            subpixelPositioning: true,
+            element: el.firstElementChild || el,
+            anchor: key === 'car' || key === 'me' ? 'center' : 'bottom',
+            rotationAlignment: 'map',
+          });
+          mk._html = html;
+          mk.setLngLat([ll.lng, ll.lat]).addTo(S.map);
+          S.markers[key] = mk;
+        } else mk.setLngLat([ll.lng, ll.lat]);
+        if (rot != null) mk.setRotation(rot);
+      }
+      // 차량 화면(Pleos)이 보내는 실시간 위치가 있으면 그것을 쓴다(3초 안에 받은 값만)
+      const liveOn = () =>
+        !!(S.live && Date.now() - S.live.at < 3000 && S.data && S.data.vehicleId === S.live.vid && S.data.showCar);
+      function carPos() {
+        if (liveOn()) return S.live.shown || S.live.pos;
+        const c = S.car;
+        if (!c || !c.route) return null;
+        return GEO.pointAlong(c.route, c.d);
+      }
+      // 경로 선을 지금 보이는 차 위치에서 시작하게 자른다(선 위에서 가장 가까운 점부터)
+      function trimFrom(leg, pos) {
+        if (!pos || leg.length < 2) return leg;
+        const kx = 111320 * Math.cos((pos.lat * Math.PI) / 180),
+          ky = 110540;
+        let best = { d: Infinity, i: 1, q: null };
+        for (let i = 1; i < leg.length; i++) {
+          const ax = (leg[i - 1][0] - pos.lng) * kx,
+            ay = (leg[i - 1][1] - pos.lat) * ky,
+            bx = (leg[i][0] - pos.lng) * kx,
+            by = (leg[i][1] - pos.lat) * ky;
+          const dx = bx - ax,
+            dy = by - ay,
+            L = dx * dx + dy * dy,
+            t = L ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / L)) : 0,
+            d = Math.hypot(ax + dx * t, ay + dy * t);
+          if (d < best.d)
+            best = {
+              d,
+              i,
+              q: [leg[i - 1][0] + (leg[i][0] - leg[i - 1][0]) * t, leg[i - 1][1] + (leg[i][1] - leg[i - 1][1]) * t],
+            };
+        }
+        return [[pos.lng, pos.lat], best.q].concat(leg.slice(best.i));
+      }
+      function remaining() {
+        if (liveOn()) {
+          const pos = S.live.shown || S.live.pos,
+            leg = S.live.legs && S.live.legs[S.data.bookingId];
+          if (leg && leg.length > 1) return trimFrom(leg, pos);
+          // 차량이 아직 출발 전이면(경로를 안 보냄) 휴대폰이 계산한 경로를 실제 차 위치에서부터 그린다
+          if (S.car && S.car.route) return trimFrom(S.car.route.coords, pos);
+          return null;
+        }
+        const c = S.car;
+        if (!c || !c.route || c.d >= c.route.length - 1) return null;
+        return GEO.slice(c.route, c.d, c.route.length);
+      }
+      function apply() {
+        if (S.fb) {
+          drawFallback();
+          return;
+        }
+        if (!S.map || !S.ready) return;
+        const d = S.data || {};
+        // 경로 선과 50m 원은 무거운 작업이라 매 프레임 다시 넘기지 않는다(선은 0.2초마다, 원은 바뀔 때만). 차 표시는 매 프레임 움직인다
+        const now = performance.now();
+        if (!S.routeAt || now - S.routeAt > 200 || S.routeMode !== S.mode) {
+          S.routeAt = now;
+          S.routeMode = S.mode;
+          const rest = remaining();
+          S.map.getSource('route') && S.map.getSource('route').setData(rest ? line(rest) : empty);
+        }
+        const ringKey = d.ring ? d.ring.lat.toFixed(6) + ',' + d.ring.lng.toFixed(6) : '';
+        if (S.ringKey !== ringKey) {
+          S.ringKey = ringKey;
+          S.map.getSource('ring') && S.map.getSource('ring').setData(d.ring ? poly(GEO.circle(d.ring, 50)) : empty);
+        }
+        marker('prev', PIN_SVG('#9AA3AE', '×'), d.prevPin);
+        marker('pin', PIN_SVG(isDark() ? '#3D9BEA' : '#002C5F', ''), d.pin);
+        marker('newpin', PIN_SVG('#0E72AF', '→'), d.newPin);
+        marker('me', '<div class="mk-me"></div>', d.me);
+        const cp = carPos();
+        marker('car', `<div class="mk-car">${ic('car')}</div>`, cp && d.showCar ? cp : null);
+      }
+      function fit() {
+        const d = S.data || {};
+        const pts = [];
+        ['pin', 'prevPin', 'newPin', 'me'].forEach((k) => {
+          if (d[k]) pts.push([d[k].lng, d[k].lat]);
+        });
+        if (S.car && S.car.route && d.showCar) S.car.route.coords.forEach((c) => pts.push(c));
+        if (S.fb) {
+          drawFallback();
+          return;
+        }
+        if (!S.map) return;
+        if (pts.length >= 2) {
+          const b = pts.reduce((bb, p) => bb.extend(p), new maplibregl.LngLatBounds(pts[0], pts[0]));
+          S.map.fitBounds(b, { padding: { top: 56, bottom: 40, left: 40, right: 40 }, maxZoom: 16.2, duration: 0 });
+        } else if (pts.length === 1) S.map.jumpTo({ center: pts[0], zoom: Math.max(S.map.getZoom(), 15.4) });
+      }
+      // 차량 경로: 회사(출발) → 탑승 위치. 탑승 위치가 바뀌면 지금 위치에서 새 경로를 받는다.
+      async function syncCar(b) {
+        if (!b || !b.pickupPoint || b.pickupPoint.lat == null || carTargetDist(b.status, 0) === null) {
+          S.car = null;
+          return;
+        }
+        const key = b.id + ':' + b.pickupPoint.lat.toFixed(6) + ',' + b.pickupPoint.lng.toFixed(6);
+        let c = S.car;
+        if (!c || c.bid !== b.id || c.key !== key) {
+          const from = c && c.bid === b.id && c.route ? GEO.pointAlong(c.route, c.d) : GEO.PLACES.office;
+          const nc = { bid: b.id, key, route: null, d: 0, target: 0 };
+          S.car = nc;
+          const r = await GEO.fetchRoute([{ lat: from.lat, lng: from.lng }, b.pickupPoint]);
+          if (S.car !== nc) return;
+          nc.route = r;
+          S.fitKey = null;
+        }
+        c = S.car;
+        if (!c.route) return;
+        c.target = carTargetDist(b.status, c.route.length);
+        if (S.fitKey !== c.key) {
+          S.fitKey = c.key;
+          fit();
+        }
+        animate();
+      }
+      function animate() {
+        if (S.anim) return;
+        let last = performance.now();
+        const step = (now) => {
+          S.anim = 0;
+          const c = S.car;
+          if (!c || !c.route) return;
+          const dt = Math.min(0.05, (now - last) / 1000);
+          last = now;
+          const diff = c.target - c.d;
+          if (Math.abs(diff) <= 0.5) {
+            c.d = c.target;
+            apply();
+            return;
+          }
+          const speed = Math.max(260, Math.abs(diff) * 1.3); // 멀면 빠르게, 가까우면 천천히(m/s, 체험용)
+          c.d += Math.sign(diff) * Math.min(Math.abs(diff), speed * dt);
+          apply();
+          S.anim = requestAnimationFrame(step);
+        };
+        S.anim = requestAnimationFrame(step);
+      }
+      // ---- 대체 지도(캔버스): 같은 좌표를 단순히 투영해서 그린다 ----
+      function fbBounds() {
+        const d = S.data || {};
+        const pts = [GEO.PLACES.office, GEO.PLACES.daycare, GEO.PLACES.school, GEO.PLACES.home];
+        ['pin', 'prevPin', 'newPin', 'me'].forEach((k) => {
+          if (d[k]) pts.push(d[k]);
+        });
+        let a = { lat: Infinity, lng: Infinity },
+          b = { lat: -Infinity, lng: -Infinity };
+        pts.forEach((p) => {
+          a.lat = Math.min(a.lat, p.lat);
+          a.lng = Math.min(a.lng, p.lng);
+          b.lat = Math.max(b.lat, p.lat);
+          b.lng = Math.max(b.lng, p.lng);
+        });
+        const padLat = (b.lat - a.lat) * 0.18 + 0.0015,
+          padLng = (b.lng - a.lng) * 0.18 + 0.0015;
+        return { s: a.lat - padLat, w: a.lng - padLng, n: b.lat + padLat, e: b.lng + padLng };
+      }
+      function drawFallback() {
+        const cv = S.fb;
+        if (!cv || !cv.isConnected) return;
+        const dpr = window.devicePixelRatio || 1,
+          W = cv.clientWidth || 320,
+          H = cv.clientHeight || 260;
+        if (cv.width !== Math.round(W * dpr)) {
+          cv.width = Math.round(W * dpr);
+          cv.height = Math.round(H * dpr);
+        }
+        const g = cv.getContext('2d');
+        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const dark = isDark(),
+          B = (S.fbB = fbBounds());
+        const X = (p) => ((p.lng - B.w) / (B.e - B.w)) * W,
+          Y = (p) => ((B.n - p.lat) / (B.n - B.s)) * H;
+        g.fillStyle = dark ? '#12161B' : '#EEF2F7';
+        g.fillRect(0, 0, W, H);
+        g.strokeStyle = dark ? '#1E242C' : '#DCE3EC';
+        g.lineWidth = 1;
+        for (let x = 0; x < W; x += 28) {
+          g.beginPath();
+          g.moveTo(x, 0);
+          g.lineTo(x, H);
+          g.stroke();
+        }
+        for (let y = 0; y < H; y += 28) {
+          g.beginPath();
+          g.moveTo(0, y);
+          g.lineTo(W, y);
+          g.stroke();
+        }
+        g.font = '600 11px ' + getComputedStyle(document.body).fontFamily;
+        g.textAlign = 'center';
+        g.fillStyle = dark ? '#AEB6C2' : '#4F5B6B';
+        Object.values(GEO.PLACES).forEach((p) => {
+          g.beginPath();
+          g.arc(X(p), Y(p), 4, 0, 7);
+          g.fill();
+          g.fillText(p.label, X(p), Y(p) - 9);
+        });
+        const rest = remaining();
+        if (rest) {
+          g.strokeStyle = dark ? '#3D9BEA' : '#0E72AF';
+          g.lineWidth = 5;
+          g.lineCap = 'round';
+          g.lineJoin = 'round';
+          g.beginPath();
+          rest.forEach((c, i) => {
+            const p = { lng: c[0], lat: c[1] };
+            i ? g.lineTo(X(p), Y(p)) : g.moveTo(X(p), Y(p));
+          });
+          g.stroke();
+        }
+        const d = S.data || {};
+        const pin = (p, col) => {
+          if (!p) return;
+          g.fillStyle = col;
+          g.beginPath();
+          g.arc(X(p), Y(p) - 14, 9, 0, 7);
+          g.fill();
+          g.beginPath();
+          g.moveTo(X(p) - 6, Y(p) - 9);
+          g.lineTo(X(p), Y(p));
+          g.lineTo(X(p) + 6, Y(p) - 9);
+          g.fill();
+          g.fillStyle = '#fff';
+          g.beginPath();
+          g.arc(X(p), Y(p) - 14, 3.5, 0, 7);
+          g.fill();
+        };
+        pin(d.prevPin, '#9AA3AE');
+        pin(d.pin, dark ? '#3D9BEA' : '#002C5F');
+        pin(d.newPin, '#0E72AF');
+        if (d.me) {
+          g.fillStyle = '#3B7DF2';
+          g.beginPath();
+          g.arc(X(d.me), Y(d.me), 6, 0, 7);
+          g.fill();
+        }
+        const cp = carPos();
+        if (cp && d.showCar) {
+          g.fillStyle = dark ? '#F2F4F7' : '#0A0F18';
+          g.beginPath();
+          g.arc(X(cp), Y(cp), 8, 0, 7);
+          g.fill();
+        }
+      }
+      /** slot(.mapslot)에 지도를 붙이고 표시할 내용을 반영한다. mode: 'pick'(핀 지정) | 'wait'(픽업 대기) */
+      function mount(slot, mode, data, onPick) {
+        if (!slot) return;
+        const modeChanged = S.mode !== mode;
+        S.mode = mode;
+        S.data = data || {};
+        S.onPick = onPick || null;
+        if (ensure()) {
+          if (S.style !== styleKey()) {
+            S.style = styleKey();
+            S.ready = false;
+            S.map.setStyle(GEO.STYLE[S.style], { diff: false });
+          }
+          slot.appendChild(S.el);
+          S.map.resize();
+          if (modeChanged) {
+            S.fitKey = null;
+            if (mode === 'pick') fit();
+          }
+          apply();
+        } else {
+          S.fb = document.createElement('canvas');
+          S.fb.className = 'mapfallback';
+          slot.appendChild(S.fb);
+          S.fb.addEventListener('click', (ev) => {
+            if (S.mode !== 'pick' || !S.onPick || !S.fbB) return;
+            const r = S.fb.getBoundingClientRect(),
+              B = S.fbB;
+            S.onPick({
+              lng: B.w + ((ev.clientX - r.left) / r.width) * (B.e - B.w),
+              lat: B.n - ((ev.clientY - r.top) / r.height) * (B.n - B.s),
+            });
+          });
+          requestAnimationFrame(drawFallback);
+        }
+      }
+      function centerOn(p) {
+        if (S.map) S.map.easeTo({ center: [p.lng, p.lat], zoom: Math.max(S.map.getZoom(), 15.4), duration: 400 });
+      }
+      function themeChanged() {
+        if (S.map && S.style !== styleKey()) {
+          S.style = styleKey();
+          S.ready = false;
+          S.map.setStyle(GEO.STYLE[S.style], { diff: false });
+        }
+        if (S.fb) drawFallback();
+      }
+      // 받은 차 위치는 바로 옮기지 않고, 직전에 보이던 위치에서 새 위치까지 받은 간격 동안 매 프레임 이어서 움직인다
+      const lerpAng = (a, b, k) => {
+        const d = ((b - a + 540) % 360) - 180;
+        return (a + d * k + 360) % 360;
+      };
+      function liveTick() {
+        S.liveRaf = 0;
+        const L = S.live;
+        if (!L || !L.from || !L.pos) return;
+        const k = Math.min(1, (performance.now() - L.t0) / L.dur);
+        L.shown = {
+          lat: L.from.lat + (L.pos.lat - L.from.lat) * k,
+          lng: L.from.lng + (L.pos.lng - L.from.lng) * k,
+          bearing: lerpAng(L.from.bearing || 0, L.pos.bearing || 0, k),
+        };
+        if (S.mode === 'wait' && liveOn()) apply();
+        if (k < 1) S.liveRaf = requestAnimationFrame(liveTick);
+      }
+      function live(d) {
+        if (!d || d.type !== 'car') return;
+        const now = performance.now(),
+          prev = S.live;
+        const from = prev && prev.vid === d.vehicleId && (prev.shown || prev.pos);
+        const jump = !from || GEO.haversine(from, d.pos) > 400; // 너무 멀면(경로 새로 시작) 바로 옮긴다
+        S.live = {
+          pos: d.pos,
+          legs: d.legs || {},
+          vid: d.vehicleId,
+          driving: d.driving,
+          at: Date.now(),
+          from: jump ? d.pos : from,
+          shown: jump ? d.pos : from,
+          t0: now,
+          dur: Math.max(16, Math.min(250, prev && prev.t0 ? now - prev.t0 : 33)),
+        };
+        if (!S.liveRaf) S.liveRaf = requestAnimationFrame(liveTick);
+        if (S.mode === 'wait' && liveOn()) {
+          apply();
+          // 처음 실시간 위치를 받으면 차량과 탑승 위치가 함께 보이게 맞춘다
+          const key = S.data.bookingId + (S.live.legs[S.data.bookingId] ? ':leg' : '');
+          if (S.liveFit !== key && S.map && S.ready) {
+            S.liveFit = key;
+            const pts = [[d.pos.lng, d.pos.lat]];
+            if (S.data.pin) pts.push([S.data.pin.lng, S.data.pin.lat]);
+            (S.live.legs[S.data.bookingId] || []).forEach((c) => pts.push(c));
+            const b = pts.reduce((bb, p) => bb.extend(p), new maplibregl.LngLatBounds(pts[0], pts[0]));
+            S.map.fitBounds(b, { padding: { top: 56, bottom: 40, left: 40, right: 40 }, maxZoom: 16.2, duration: 600 });
+          }
+        }
+      }
+      return {
+        mount,
+        syncCar,
+        centerOn,
+        themeChanged,
+        apply,
+        live,
+        get liveData() {
+          return liveOn() ? S.live : null;
+        },
+        reset() {
+          S.car = null;
+          S.fitKey = null;
+        },
+        get car() {
+          const c = S.car;
+          return c && c.route
+            ? { d: c.d, target: c.target, len: c.route.length, source: c.route.source, pos: carPos() }
+            : null;
+        },
+        get route() {
+          return S.car && S.car.route;
+        },
+        get mode() {
+          return S.mode;
+        },
+        get ready() {
+          return S.ready;
+        },
+        get failed() {
+          return S.failed;
+        },
+        get map() {
+          return S.map;
+        },
+        pick(p) {
+          if (S.onPick) S.onPick(p);
+        },
+      };
+    })();
+
+    /* ===================== 공통 조각 ===================== */
+    function topbar(title, opts) {
+      opts = opts || {};
+      const u = me();
+      const unread = u ? core.state.notifications.filter((n) => n.userId === u.id && !n.read).length : 0;
+      return `<div class="top">
+    ${opts.back ? `<button class="iconbtn" data-action="back" aria-label="뒤로">${SVG.back}</button>` : ''}
+    <div class="title">${title}</div>
+    ${u ? `<button class="iconbtn" data-action="notifications" aria-label="알림 ${unread}개">${ic('bell')}${unread ? `<span class="badge-dot">${unread}</span>` : ''}</button>` : ''}
+  </div>`;
+    }
+    function navbar() {
+      const u = me();
+      if (!u) return '';
+      const items =
+        u.role === ROLE.DRIVER
+          ? [
+              ['dhome', '홈', 'home'],
+              ['dvehicles', '차량', 'car'],
+              ['dqr', 'Pleos 연결', 'computer'],
+              ['profile', '프로필', userIcon(u)],
+            ]
+          : [
+              ['home', '홈', 'home'],
+              ['booking', '탑승 예약', 'pin'],
+              ['settings', '내 자리', 'seat'],
+              ['profile', '프로필', userIcon(u)],
+            ]; // 탭 순서: 홈 → 탑승 예약 → 내 자리 → 프로필
+      const cur = ui.view === 'waiting' || ui.view === 'map' ? 'booking' : ui.view;
+      return `<nav class="nav" aria-label="하단 탐색">${items.map(([v, l, icn]) => `<button class="${cur === v ? 'on' : ''}" data-action="go" data-view="${v}" aria-current="${cur === v ? 'page' : 'false'}"><span class="navic">${ic(icn)}</span><span>${l}</span></button>`).join('')}</nav>`;
+    }
+    function statusText(u) {
+      if (u.role === ROLE.DRIVER) {
+        const linked = Object.values(core.state.vehicles).filter(
+          (v) => v.ownerId === u.id && core.state.pleosLinks[v.id],
+        ).length;
+        const pend = core.pendingRequestsForDriver(u.id).filter((b) => b.status === BOOKING.REQUESTED).length;
+        if (pend) return `픽업 요청 ${pend}건이 기다리고 있어요`;
+        return linked ? `Pleos 연결 차량 ${linked}대` : 'Pleos 차량 앱을 아직 연결하지 않았어요';
+      }
+      const b = core.getActiveBooking(u.id);
+      if (b)
+        return {
+          REQUESTED: '운전자 확인을 기다리는 중',
+          ACCEPTED: '차량이 오고 있어요',
+          APPROACHING: '곧 도착해요',
+          ARRIVED: '차량이 도착했어요',
+        }[b.status];
+      const vs = core.invitedVehiclesFor(u.id);
+      if (!vs.length) return '아직 초대받은 차량이 없어요';
+      const editable = vs.filter((v) => core.canEditSettings(u.id, v.id)).length;
+      return editable ? `차량 ${vs.length}대, 설정 변경 가능 ${editable}대` : `차량 ${vs.length}대, 설정은 확인만 가능`;
+    }
+    const banner = (kind, icon, title, body, extra) =>
+      `<div class="banner ${kind} ${extra || ''}">${ic(icon)}<div><b>${title}</b>${body ? `<p class="small">${body}</p>` : ''}</div></div>`;
+
+    /* ===================== 화면들 ===================== */
+    // 카품 엠블럼(carpoom-brand.js): 손그림 스케치를 따른 타원 + 이탤릭 H(클리핑) + 벨트 대각선. 스플래시 애니메이션의 마지막 장면.
+    let EMB_N = 0;
+    const EMBLEM = (cls) => window.CarpoomBrand.emblem('m' + EMB_N++, cls);
+    function showSplash() {
+      if (!document.getElementById('cp-anim')) {
+        const st = document.createElement('style');
+        st.id = 'cp-anim';
+        st.textContent = window.CarpoomBrand.animCss('.splash .emb');
+        document.head.appendChild(st);
+      }
+      const el = document.createElement('div');
+      el.className = 'splash';
+      el.setAttribute('role', 'presentation');
+      el.innerHTML = EMBLEM('emb'); // 시작 화면은 엠블럼만
+      const done = () => {
+        el.remove();
+      };
+      el.addEventListener('click', done);
+      el.addEventListener('animationend', (e) => {
+        if (e.animationName === 'splashOut') done();
+      });
+      document.body.appendChild(el);
+    }
+    function viewTheme() {
+      const pv = (
+        dark,
+      ) => `<div class="pv" style="background:${dark ? '#0B0D10' : '#FFFFFF'};box-shadow:inset 0 0 0 1px ${dark ? '#262B33' : '#D5DCE5'}">
+    <i style="width:60%;height:12px;background:${dark ? '#F2F4F7' : '#0A0F18'}"></i><i style="width:40%;height:8px;background:${dark ? '#9AA3AF' : '#4F5B6B'}"></i>
+    <i style="height:54px;background:${dark ? '#1E2228' : '#F4F6F9'};border-radius:12px"></i>
+    <i style="height:30px;background:${dark ? '#3D9BEA' : '#002C5F'};border-radius:10px"></i></div>`;
+      return `<div class="content" style="padding-top:28px">
+    <div class="hero" style="padding-bottom:0"><span style="color:var(--accent);width:72px;height:72px;display:block">${EMBLEM('')}</span><h1>화면을 어떻게 볼까요?</h1><p class="muted">편한 쪽을 골라 주세요. 프로필에서 언제든 바꿀 수 있어요.</p></div>
+    <div class="themepick">
+      <button class="themecard ${ui.theme === 'dark' ? 'on' : ''}" data-action="pickTheme" data-v="dark">${pv(true)}<b>어둡게</b><span class="d">차량 Pleos 화면과 같은 색이에요</span></button>
+      <button class="themecard ${ui.theme === 'light' ? 'on' : ''}" data-action="pickTheme" data-v="light">${pv(false)}<b>밝게</b><span class="d">글자가 더 또렷해요. 어르신께 추천해요</span></button>
+    </div>
+  </div>`;
+    }
+    function viewWelcome() {
+      const users = Object.values(core.state.users).filter((u) => u.id.startsWith('u_'));
+      return (
+        topbar('') +
+        `<div class="content">
+    <div class="hero"><div class="logo" style="color:var(--accent)"><span style="width:70px;height:70px;display:block">${EMBLEM('')}</span></div><h1>카품 Car Poom</h1><p class="muted">운전자와 동승자를 이어 픽업을 예약하고,<br>내 자리에 맞는 좌석, 열선, 공조를 준비해요.</p></div>
+    <button class="btn primary lg block" data-action="go" data-view="signup">처음 시작하기 (회원가입)</button>
+    <div class="card"><div class="card-title">${ic('sparkles', 'sm')}데모 계정으로 시작하기</div><p class="small muted">한 기기에서 계정을 바꿔 가며 초대, 권한, 픽업 흐름을 확인할 수 있어요.</p>
+      <div class="list">${users.map((u) => `<button class="item on-soft" data-action="switchUser" data-id="${u.id}">${tile(userIcon(u))}<span class="grow"><b>${h(u.name)}</b><span class="small muted">${u.role === ROLE.DRIVER ? '운전자' : '동승자'}, ${u.isAdult ? '성인' : '어린이'}</span></span>${SVG.chev}</button>`).join('')}</div>
+    </div>
+  </div>`
+      );
+    }
+    function viewSignup() {
+      const s = ui.signup;
+      return (
+        topbar('회원가입', { back: true }) +
+        `<div class="content">
+    <h1>어떻게 불러 드릴까요?</h1>
+    <div class="field"><label for="f-name">이름 또는 별명</label><input id="f-name" class="input" data-bind="signup.name" value="${h(s.name)}" maxlength="12" placeholder="예: 하늘" autocomplete="nickname" enterkeyhint="done"><span class="help">홈 화면에서 "OO님, 안녕하세요"로 보여요.</span></div>
+    <h2>성인이신가요?</h2>
+    <div class="stack">
+      <button class="bigchoice ${s.isAdult === true ? 'selected' : ''}" data-action="setAdult" data-v="1">${tile('adult')}<span class="grow"><b>네, 성인이에요</b><span class="small muted">운전자 또는 동승자를 선택할 수 있어요</span></span></button>
+      <button class="bigchoice ${s.isAdult === false ? 'selected' : ''}" data-action="setAdult" data-v="0">${tile('child')}<span class="grow"><b>아직 성인이 아니에요</b><span class="small muted">동승자로 내 자리 설정과 탑승 예약을 써요</span></span></button>
+    </div>
+    ${banner('warn', 'info', '성인 확인 안내', '실제 서비스에서는 본인 인증으로 성인 여부를 확인해요.')}
+    <div class="actions sticky"><button class="btn primary lg block" data-action="signup" ${!s.name.trim() || s.isAdult === null ? 'disabled' : ''}>다음</button></div>
+  </div>`
+      );
+    }
+    function viewRole() {
+      const u = me();
+      const roles = core.availableRoles(u.id);
+      return (
+        topbar('역할 선택') +
+        `<div class="content">
+    <h1>${h(u.name)}님, 어떤 역할로 시작할까요?</h1>
+    <div class="stack">
+      <button class="bigchoice" data-action="setRole" data-role="driver" ${roles.includes(ROLE.DRIVER) ? '' : 'disabled'}>${tile('car')}<span class="grow"><b>운전자</b><span class="small muted">${roles.includes(ROLE.DRIVER) ? 'Pleos 연결, 동승자 초대와 권한 관리' : '성인 인증 후 선택할 수 있어요'}</span></span></button>
+      <button class="bigchoice" data-action="setRole" data-role="passenger">${tile('seat')}<span class="grow"><b>동승자</b><span class="small muted">내 자리 설정과 차량 탑승 예약</span></span></button>
+    </div>
+    ${u.isAdult ? '' : '<p class="small muted">어린이는 동승자 기능을 이용해요. 설정 변경은 운전자의 초대와 권한이 있을 때 가능해요.</p>'}
+  </div>`
+      );
+    }
+
+    function viewHome() {
+      const u = me();
+      const vs = core.invitedVehiclesFor(u.id);
+      const vid = currentVehicleId();
+      const v = vid && core.state.vehicles[vid];
+      const p = v ? core.getProfile(u.id, vid).saved : DEFAULT_PROFILE();
+      const b = core.getActiveBooking(u.id);
+      const edit = v && core.canEditSettings(u.id, vid);
+      return (
+        topbar('카품') +
+        `<div class="content">
+    <div class="greet"><h1>${h(u.name)}님, 안녕하세요 ${ic('wave')}</h1><span class="statuspill ${b ? 'wait' : ''}"><i></i>${statusText(u)}</span></div>
+    ${b ? `<button class="banner info" data-action="go" data-view="waiting">${ic('car')}<div><b>${bookingTitle(b)}</b><p class="small">${h(b.pickupPoint.label || '')}, ${h(core.pickupTimeLabel(b.pickupTime))}${b.plan && Core.ACTIVE_STATES.includes(b.status) ? `, ${Core.fmtHM(b.plan.eta)} 도착 예정` : ''}</p></div>${SVG.chev}</button>` : ''}
+    <div class="tiles">
+      <button class="tile primary" data-action="go" data-view="booking">${ic('pin')}<div><b>탑승 예약</b><span>위치와 시간 정하기</span></div></button>
+      <button class="tile" data-action="go" data-view="settings">${ic('seat')}<div><b>내 자리 설정</b><span>좌석, 열선, 공조</span></div></button>
+    </div>
+    <div class="stage tap" data-action="go" data-view="settings" role="button" aria-label="내 자리 설정 열기">
+      <div class="seatwrap" id="home-seat"></div>
+    </div>
+    ${seatStatusList(p, v && v.capabilities)}
+    ${vs.length ? '' : banner('warn', 'mail', '아직 초대받은 차량이 없어요', '운전자가 초대하면 차량이 여기 나타나요. 데모에서는 운전자 지민 계정으로 초대할 수 있어요.')}
+  </div>` +
+        navbar()
+      );
+    }
+    // 내 자리 상태를 한 줄에 하나씩 보여 준다(항목, 값)
+    function seatStatusList(p, caps) {
+      caps = caps || {};
+      const row = (icon, name, val, on) =>
+        `<div class="srow">${ic(icon)}<span>${name}</span><b class="${on ? 'on' : ''}">${val}</b></div>`;
+      const out = [row('chair', '등받이', reclineLabel(p.recline), false)];
+      if (caps.heater !== false) out.push(row('fire', '열선', p.heater.on ? p.heater.level + '단' : '끔', p.heater.on));
+      if (caps.climate !== false)
+        out.push(
+          row('wind', '공조', p.climate.on ? `${p.climate.temp}°C, 바람 ${p.climate.fan}단` : '끔', p.climate.on),
+        );
+      if (caps.window !== false)
+        out.push(row('window', '창문', p.window.open ? p.window.open + '% 열림' : '닫힘', !!p.window.open));
+      if (p.seatId) out.push(row('seat', '내 좌석', seatLabel(p.seatId) + (p.rememberSeat ? ' (기억함)' : ''), false));
+      return `<div class="statlist" aria-label="내 자리 상태">${out.join('')}</div>`;
+    }
+    function seatStatusChips(p, caps) {
+      caps = caps || {};
+      const out = [];
+      out.push(`<span class="chip muted">${ic('chair', 'xs')}등받이 ${reclineLabel(p.recline)}</span>`);
+      if (caps.heater !== false)
+        out.push(
+          `<span class="chip ${p.heater.on ? 'heat' : 'muted'}">${ic('fire', 'xs')}열선 ${p.heater.on ? p.heater.level + '단' : '끔'}</span>`,
+        );
+      if (caps.climate !== false)
+        out.push(
+          `<span class="chip ${p.climate.on ? 'teal' : 'muted'}">${ic('wind', 'xs')}공조 ${p.climate.on ? p.climate.temp + '°, 바람 ' + p.climate.fan : '끔'}</span>`,
+        );
+      if (caps.window !== false)
+        out.push(
+          `<span class="chip muted">${ic('window', 'xs')}창문 ${p.window.open ? p.window.open + '% 열림' : '닫힘'}</span>`,
+        );
+      if (p.seatId)
+        out.push(
+          `<span class="chip accent">${ic('seat', 'xs')}${seatLabel(p.seatId)}${p.rememberSeat ? ', 기억함' : ''}</span>`,
+        );
+      return out.join('');
+    }
+    const relationOf = (v, uid) => (v && v.members && v.members[uid] && v.members[uid].relation) || '';
+    function reclineLabel(r) {
+      return r < 25 ? '곧게' : r < 55 ? '편안하게' : r < 80 ? '많이 젖힘' : '거의 누움';
+    }
+    function seatLabel(id) {
+      return { FR: '조수석', RL: '뒷좌석 왼쪽', RR: '뒷좌석 오른쪽' }[id] || id;
+    }
+    function bookingTitle(b) {
+      return {
+        REQUESTED: '운전자 확인 대기 중',
+        ACCEPTED: '운전자가 수락했어요',
+        APPROACHING: '곧 도착해요, 탑승 준비',
+        ARRIVED: '차량이 도착했어요',
+        REJECTED: '운전자가 거절했어요',
+        CANCELLED: '픽업이 취소되었어요',
+        COMPLETED: '탑승 완료',
+      }[b.status];
+    }
+
+    // 탑승 희망 시간: { mode:'asap' } | { mode:'in', min } | { mode:'at', hm:'17:30' } → 시각(ms). 지난 시각을 고르면 다음 날로 본다.
+    function bookingTimeAt(t) {
+      const now = Date.now();
+      if (!t || t.mode === 'asap') return now;
+      if (t.mode === 'in') return now + t.min * 60000;
+      const [hh, mm] = String(t.hm || '')
+        .split(':')
+        .map(Number);
+      if (!isFinite(hh) || !isFinite(mm)) return now;
+      const d = new Date();
+      d.setHours(hh, mm, 0, 0);
+      let at = d.getTime();
+      if (at < now - 60000) at += 86400000;
+      return at;
+    }
+    const bookingTimePayload = (t) =>
+      !t || t.mode === 'asap' ? { mode: 'asap' } : { mode: 'at', at: bookingTimeAt(t) };
+    function currentVehicleId() {
+      const u = me();
+      if (!u) return null;
+      const vs = core.invitedVehiclesFor(u.id);
+      if (ui.draftVehicleId && vs.some((v) => v.id === ui.draftVehicleId)) return ui.draftVehicleId;
+      ui.draftVehicleId = vs.length ? vs[0].id : null;
+      return ui.draftVehicleId;
+    }
+    function ensureDraft() {
+      const u = me();
+      const vid = currentVehicleId();
+      if (!vid) {
+        ui.draft = null;
+        return null;
+      }
+      if (!ui.draft || ui.draft._vid !== vid) {
+        ui.draft = Object.assign(clone(core.getProfile(u.id, vid).saved), { _vid: vid });
+      }
+      return ui.draft;
+    }
+    function draftEquals(d, saved) {
+      const a = clone(d);
+      delete a._vid;
+      return JSON.stringify(a) === JSON.stringify(saved);
+    }
+    const RECLINE_PRESETS = [
+      ['곧게 앉기', 10, 'chair'],
+      ['편안하게', 40, 'seat'],
+      ['누워서 쉬기', 80, 'recline'],
+    ];
+
+    function viewSettings() {
+      const u = me();
+      const vs = core.invitedVehiclesFor(u.id);
+      if (!vs.length)
+        return (
+          topbar('내 자리 설정') +
+          `<div class="content"><div class="hero">${ic('seat', 'xl')}<h2>초대받은 차량이 없어요</h2><p class="muted">운전자가 차량에 초대하면 그 차량에 맞춰 내 자리를 설정할 수 있어요.</p></div><button class="btn block" data-action="go" data-view="home">홈으로</button></div>` +
+          navbar()
+        );
+      const vid = currentVehicleId();
+      const v = core.state.vehicles[vid];
+      const caps = v.capabilities;
+      const prof = core.getProfile(u.id, vid);
+      const d = ensureDraft();
+      const edit = core.canEditSettings(u.id, vid);
+      const dirty = !draftEquals(d, prof.saved);
+      const applyChip = {
+        NONE: ['muted', '차량 적용 전'],
+        SENT: ['warn', '차량 응답 대기'],
+        PENDING: ['warn', '차량 응답 대기'],
+        APPLIED: ['ok', '차량 적용 완료'],
+        FAILED: ['bad', '차량 적용 실패'],
+      }[prof.apply.status];
+      const lock = !edit;
+      const setting = (name, icon, body, supported) =>
+        `<div class="setting ${!supported || lock ? 'locked' : ''}"><div class="head"><span class="name">${tile(icon)}<span>${name}</span>${!supported ? '<span class="chip muted">이 차량 미지원</span>' : ''}</span>${body.head || ''}</div>${body.rest || ''}</div>`;
+      const off = (cap) => (!cap || lock ? 'disabled' : '');
+      return (
+        topbar('내 자리 설정') +
+        `<div class="content">
+    <select class="input" id="f-vehicle" data-bind="vehicle" aria-label="차량 선택">${vs.map((x) => `<option value="${x.id}" ${x.id === vid ? 'selected' : ''}>${h(x.name)} (${h(x.plate)})</option>`).join('')}</select>
+    <div class="row wrap">
+      <span class="chip ${edit ? 'ok' : 'bad'}">${ic(edit ? 'key' : 'lock', 'xs')}${edit ? '변경 권한 있음' : '확인만 가능'}</span>
+      <span class="chip ${dirty ? 'warn' : 'muted'}" id="dirty-chip">${dirty ? '저장하지 않은 변경' : '저장된 값'}</span>
+      <span class="chip ${applyChip[0]}">${applyChip[1]}</span>
+    </div>
+    ${lock ? banner('warn', 'lock', '설정 변경 권한이 없어요', core.membership(u.id, vid).invited ? '이 차량의 운전자가 권한을 주면 직접 바꿀 수 있어요. 지금은 운전자가 설정을 담당해요.' : '이 차량의 초대가 필요해요.') : ''}
+    <div class="sticky-stage"><div class="stage"><div class="seatwrap compact" id="set-seat"></div></div>
+    </div>
+    ${dirty && !lock ? `<button class="btn primary block" data-action="saveProfile">저장하기</button>` : ''}
+    <div class="card">
+      ${setting(
+        '등받이 각도는?',
+        'chair',
+        {
+          head: `<span class="val" data-val="recline">${reclineLabel(d.recline)}</span>`,
+          rest: `
+        <div class="presets">${RECLINE_PRESETS.map(([l, val, icn]) => `<button data-action="setRecline" data-v="${val}" class="${Math.abs(d.recline - val) < 8 ? 'on' : ''}" ${off(caps.recline)}>${ic(icn)}${l}</button>`).join('')}</div>
+        <input type="range" class="slider" id="f-recline" min="0" max="100" value="${d.recline}" data-bind="recline" aria-label="등받이 기울기" ${off(caps.recline)}>
+        <div class="ends"><span>앉아서</span><span>누워서</span></div>`,
+        },
+        caps.recline,
+      )}
+      ${setting('좌석 위치', 'arrows', { head: `<span class="val" data-val="seatPosition">${posLabel(d.seatPosition)}</span>`, rest: `<input type="range" class="slider" id="f-pos" min="0" max="100" value="${d.seatPosition}" data-bind="seatPosition" aria-label="좌석 위치" ${off(caps.seatPosition)}><div class="ends"><span>앞으로</span><span>뒤로</span></div>` }, caps.seatPosition)}
+      ${setting('열선', 'fire', { head: `<span class="val" data-val="heater">${d.heater.on ? d.heater.level + '단' : '끔'}</span><input type="checkbox" class="toggle heat" id="f-heat" data-bind="heater.on" ${d.heater.on ? 'checked' : ''} ${off(caps.heater)} aria-label="열선 켜기">`, rest: `<div class="stepper">${[1, 2, 3].map((l) => `<button data-action="setLevel" data-key="heater.level" data-v="${l}" class="${d.heater.level === l ? 'on' : ''}" ${!caps.heater || lock || !d.heater.on ? 'disabled' : ''}>${l}단</button>`).join('')}</div>` }, caps.heater)}
+      ${setting('공조', 'wind', { head: `<span class="val" data-val="climate">${d.climate.on ? d.climate.temp + '°, 바람 ' + d.climate.fan : '끔'}</span><input type="checkbox" class="toggle cool" id="f-clim" data-bind="climate.on" ${d.climate.on ? 'checked' : ''} ${off(caps.climate)} aria-label="공조 켜기">`, rest: `<div class="dialrow"><button class="roundbtn" data-action="setTemp" data-v="-1" aria-label="온도 내리기" ${!caps.climate || lock || !d.climate.on || d.climate.temp <= 16 ? 'disabled' : ''}>−</button>${tempDial(d.climate.temp, !caps.climate || lock || !d.climate.on)}<button class="roundbtn" data-action="setTemp" data-v="1" aria-label="온도 올리기" ${!caps.climate || lock || !d.climate.on || d.climate.temp >= 30 ? 'disabled' : ''}>+</button></div><div class="row"><span class="small muted" style="flex:none;width:2.6em">바람</span><div class="stepper grow">${[1, 2, 3, 4, 5].map((l) => `<button data-action="setLevel" data-key="climate.fan" data-v="${l}" class="${d.climate.fan === l ? 'on' : ''}" ${!caps.climate || lock || !d.climate.on ? 'disabled' : ''}>${l}</button>`).join('')}</div></div>` }, caps.climate)}
+      ${setting('창문', 'window', { head: `<span class="val" data-val="window">${d.window.open ? d.window.open + '% 열림' : '닫힘'}</span>`, rest: `<input type="range" class="slider" id="f-win" min="0" max="100" step="10" value="${d.window.open}" data-bind="window.open" aria-label="창문 열림" ${off(caps.window)}><div class="ends"><span>닫힘</span><span>활짝</span></div>` }, caps.window)}
+    </div>
+    <div class="card">
+      <div class="row wrap"><div class="card-title grow">${ic('seat', 'sm')}탑승 예정 좌석</div><span class="chip ${d.rememberSeat ? 'accent' : 'muted'}">${d.rememberSeat ? '이 좌석 기억함' : '픽업마다 선택'}</span></div>
+      ${seatPickSVG(v, d.seatId, lock)}
+      <label class="row" style="min-height:var(--tap)"><span class="grow"><b>이 좌석 기억하기</b><span class="small muted">끄면 예약할 때마다 좌석을 골라요</span></span><input type="checkbox" class="toggle" id="f-remember" data-bind="rememberSeat" ${d.rememberSeat ? 'checked' : ''} ${lock || !d.seatId ? 'disabled' : ''}></label>
+    </div>
+    <div class="card">
+      <div class="field"><label for="f-weight">몸무게 (선택)</label><div class="row"><input id="f-weight" class="input grow" type="number" inputmode="numeric" min="10" max="250" placeholder="입력하지 않아도 돼요" value="${d.weightKg == null ? '' : d.weightKg}" data-bind="weightKg" ${lock ? 'disabled' : ''}><span class="muted" style="flex:none">kg</span></div><span class="help">좌석 추천에만 참고해요. 신원 확인이나 탑승 판정에는 쓰지 않아요.</span></div>
+    </div>
+    ${prof.savedAt ? `<p class="tiny muted">마지막 저장 ${fmtTime(prof.savedAt)}${prof.apply.at ? `, 차량 응답 ${fmtTime(prof.apply.at)}${prof.apply.message ? ', ' + h(prof.apply.message) : ''}` : ''}</p>` : ''}
+    <div class="actions">
+      ${dirty && !lock ? `<button class="btn ghost block" data-action="discardDraft">변경 취소</button>` : ''}
+      <button class="btn primary lg block" data-action="saveProfile" ${lock || !dirty ? 'disabled' : ''}>${lock ? '저장은 운전자가 담당해요' : '저장하기'}</button>
+      <button class="btn soft block" data-action="requestApply" ${lock || !prof.savedAt || dirty || prof.apply.status === APPLY.SENT ? 'disabled' : ''}>${ic('satellite', 'sm')}${prof.apply.status === APPLY.SENT ? '차량 응답 기다리는 중…' : '저장한 값 차량에 적용 요청'}</button>
+    </div>
+  </div>` +
+        navbar()
+      );
+    }
+    function posLabel(p) {
+      return p < 30 ? '앞쪽' : p < 70 ? '가운데' : '뒤쪽';
+    }
+
+    function viewBooking() {
+      const u = me();
+      const b = core.getActiveBooking(u.id);
+      if (b) {
+        ui.view = 'waiting';
+        return viewWaiting();
+      }
+      const vs = core.invitedVehiclesFor(u.id);
+      const last = core.bookingsFor(u.id)[0];
+      return (
+        topbar('탑승 예약') +
+        `<div class="content">
+    <div class="hero">${ic('car', 'xl')}<h1>차량 탑승을 예약할까요?</h1><p class="muted">예약하면 지도에서 탑승 위치를 정하고<br>운전자에게 요청을 보내요.</p></div>
+    ${
+      vs.length
+        ? `<div class="actions"><button class="btn primary lg block" data-action="go" data-view="map">${ic('pin', 'sm')}네, 예약할게요</button><div class="grid2"><button class="btn block" data-action="go" data-view="home">아니요, 메인으로</button><button class="btn ghost block" data-action="back">이전 단계로</button></div></div>`
+        : `${banner('warn', 'mail', '초대받은 차량이 없어요', '운전자의 초대를 받은 뒤 예약할 수 있어요.')}<div class="grid2"><button class="btn block" data-action="go" data-view="home">메인으로</button><button class="btn ghost block" data-action="back">이전 단계로</button></div>`
+    }
+    ${last ? `<div class="card soft"><b class="small">최근 예약</b><div class="row"><span class="grow small">${h(last.pickupPoint.label || '')}, ${bookingTitle(last)}</span><span class="tiny muted" style="flex:none">${fmtTime(last.createdAt)}</span></div></div>` : ''}
+  </div>` +
+        navbar()
+      );
+    }
+    function viewMap() {
+      const u = me();
+      const vs = core.invitedVehiclesFor(u.id);
+      const vid = currentVehicleId();
+      const v = core.state.vehicles[vid];
+      const pin = ui.pin;
+      const p = core.getProfile(u.id, vid).saved;
+      const taken = core.takenSeats(vid);
+      const memoryTaken = p.rememberSeat && p.seatId && taken[p.seatId];
+      const needSeat = !(p.rememberSeat && p.seatId) || memoryTaken;
+      const t = ui.bookingTime;
+      const tAt = bookingTimeAt(t);
+      const tBtn = (mode, label, min) =>
+        `<button data-action="setBookingTime" data-mode="${mode}" data-min="${min || 0}" class="${t.mode === mode && (mode !== 'in' || t.min === min) ? 'on' : ''}">${label}</button>`;
+      return (
+        topbar('탑승 위치, 시간', { back: true }) +
+        `<div class="content flush">
+    <div class="mapbox"><div class="mapslot" id="map-pick" role="application" aria-label="실제 지도. 눌러서 탑승 위치를 지정해요."></div>
+    </div>
+    <div class="sheet-panel"><div class="pad">
+      <p class="muted small">지도를 눌러 탑승 위치를 정해 주세요. 손가락으로 지도를 움직이고 확대할 수 있어요.</p>
+      <div class="card">
+        <div class="row">${tile('pin')}<div class="grow"><b>${pin ? h(pin.label) : '아직 위치를 정하지 않았어요'}</b><span class="small muted">${pin ? `${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)}` : '지도를 눌러 주세요'}</span></div></div>
+        <button class="btn soft block" data-action="useMyLocation">${DemoLocation.status === 'denied' ? '위치 권한 거부됨, 지도에서 직접 지정' : '내 위치 사용'}</button>
+      </div>
+      <div class="card">
+        <div class="card-title">${ic('clock', 'sm')}언제 탈까요?</div>
+        <div class="timepick">${tBtn('asap', '지금 바로')}${tBtn('in', '10분 뒤', 10)}${tBtn('in', '20분 뒤', 20)}${tBtn('in', '30분 뒤', 30)}</div>
+        <div class="field"><label for="f-bth">시간 직접 입력 (24시간제)</label><div class="hmrow"><input id="f-bth" class="input" type="text" inputmode="numeric" maxlength="2" placeholder="18" data-bind="bookingTimeH" value="${t.mode === 'at' ? h(t.hm.split(':')[0]) : ''}" aria-label="시">시<input id="f-btm" class="input" type="text" inputmode="numeric" maxlength="2" placeholder="00" data-bind="bookingTimeM" value="${t.mode === 'at' ? h(t.hm.split(':')[1]) : ''}" aria-label="분">분</div><span class="help">운전자가 다른 분 요청과 함께 동선을 짜요</span></div>
+        <p class="small" id="btime-label" style="color:var(--accent-2);font-weight:700">${t.mode === 'asap' ? '지금 바로 탈게요' : `${Core.fmtHM(tAt)}쯤 탈게요`}</p>
+      </div>
+      <div class="card">
+        <div class="card-title">${ic('car', 'sm')}차량</div>
+        <select class="input" id="f-bvehicle" data-bind="vehicle" aria-label="차량 선택">${vs.map((x) => `<option value="${x.id}" ${x.id === vid ? 'selected' : ''}>${h(x.name)} (${h(x.plate)})</option>`).join('')}</select>
+        ${needSeat ? `<div class="row wrap"><b class="grow" style="min-width:11em">이번에는 어디에 앉을까요?</b><span class="chip muted">${memoryTaken ? '기억한 좌석이 이미 예약됨' : '좌석 기억 안 함'}</span></div>${seatPickSVG(v, ui.bookingSeat, false, taken)}` : `<div class="row"><span class="grow small">탑승 좌석: <b style="display:inline">${seatLabel(p.seatId)}</b> (기억한 좌석)</span></div>`}
+      </div>
+      <div class="field"><label for="f-note">운전자에게 한마디 (선택)</label><input id="f-note" class="input" data-bind="bookingNote" value="${h(ui.bookingNote)}" maxlength="40" placeholder="예: 정문 앞 벤치에 있어요" enterkeyhint="done"></div>
+      <div class="actions"><button class="btn primary lg block" data-action="confirmBooking" ${!pin || (needSeat && !ui.bookingSeat) ? 'disabled' : ''}>${!pin ? '지도에서 위치를 정해 주세요' : needSeat && !ui.bookingSeat ? '좌석을 골라 주세요' : '예약 요청'}</button><button class="btn ghost block" data-action="go" data-view="booking">예약하지 않기</button></div>
+    </div></div>
+  </div>`
+      );
+    }
+    function viewWaiting() {
+      const u = me();
+      const b = core.getActiveBooking(u.id) || core.bookingsFor(u.id)[0];
+      if (!b) {
+        ui.view = 'booking';
+        return viewBooking();
+      }
+      const v = core.state.vehicles[b.vehicleId];
+      const active = Core.ACTIVE_STATES.includes(b.status);
+      const stepsOrder = ['REQUESTED', 'ACCEPTED', 'APPROACHING', 'ARRIVED', 'COMPLETED'];
+      const idx = stepsOrder.indexOf(b.status);
+      const stepLabels = ['요청', '수락', '접근', '도착', '탑승'];
+      const relocating = b.relocation && !b.relocation.confirmed;
+      const callReq = core.state.notifications.find(
+        (n) => n.userId === u.id && n.callRequest && n.bookingId === b.id && !n.read,
+      );
+      const last = (b.history[b.history.length - 1] || {}).note;
+      const statusBanner = {
+        REQUESTED: banner(
+          'info',
+          'clock',
+          '운전자 확인을 기다리고 있어요',
+          `${h(v.name)} 운전자가 요청을 보고 있어요.`,
+        ),
+        ACCEPTED: banner(
+          'ok',
+          'check',
+          '운전자가 수락했어요',
+          '지정한 장소에서 기다려 주세요. 차량이 가까워지면 알려 드려요.',
+        ),
+        APPROACHING: banner(
+          'warn',
+          'car',
+          '곧 도착해요',
+          '탑승을 준비해 주세요. 차량이 탑승 위치 50m 안에 있어요.',
+          'pulse',
+        ),
+        ARRIVED: banner(
+          'ok',
+          'pin',
+          '차량이 도착했어요',
+          `${h(v.name)} (${h(v.plate)})이 탑승 위치에 있어요. ${b.seatId ? seatLabel(b.seatId) + '에 앉아 주세요.' : ''}`,
+        ),
+        REJECTED: banner('bad', 'hand', '운전자가 거절했어요', h(last || '지금은 픽업이 어려워요.')),
+        CANCELLED: banner('bad', 'cross', '픽업이 취소되었어요', h(last || '')),
+        COMPLETED: b.boardedSeatId
+          ? banner(
+              'ok',
+              'party',
+              '탑승 완료',
+              b.settingsApplied
+                ? `${seatLabel(b.boardedSeatId)}에 저장한 자리 설정이 적용됐어요.`
+                : `${seatLabel(b.boardedSeatId)}에 탑승했어요. 좌석 설정은 그대로예요.`,
+            )
+          : banner('ok', 'party', '탑승 완료', '편안한 이동 되세요. 저장한 자리 설정은 차량에서 적용돼요.'),
+      }[b.status];
+      const planLine =
+        b.plan && active
+          ? `<div class="banner info">${ic('map')}<div><b>${b.plan.of > 1 ? `${b.plan.order}번째로 모시러 가요 (총 ${b.plan.of}명)` : '바로 모시러 가요'}</b><p class="small">${Core.fmtHM(b.plan.eta)}쯤 도착 예정, 운전자가 Pleos에서 동선을 정했어요</p></div></div>`
+          : '';
+      return (
+        topbar(active ? '픽업 대기' : '예약 결과', { back: !active }) +
+        `<div class="content flush">
+    <div class="mapbox"><div class="mapslot" id="map-wait" role="img" aria-label="실제 지도. 탑승 위치와 차량 접근 상태"></div>
+      <div class="maplegend"><span><span class="legend-dot" style="background:var(--accent)"></span>탑승 위치</span>${relocating ? '<span><span class="legend-dot" style="background:#0E72AF"></span>새 탑승 위치</span>' : ''}${b.previousPoint ? '<span><span class="legend-dot" style="background:#9AA3AE"></span>이전 위치</span>' : ''}${DemoLocation.status === 'granted' ? '<span><span class="legend-dot" style="background:#3B7DF2"></span>내 위치</span>' : ''}</div>
+    </div>
+    <div class="sheet-panel"><div class="pad">
+      <div class="steps">${stepLabels.map((l, i) => `<div class="${active ? (i < idx ? 'done' : i === idx ? 'now' : '') : b.status === 'COMPLETED' ? 'done' : i <= idx ? 'done' : ''}"><span></span>${l}</div>`).join('')}</div>
+      ${statusBanner}
+      ${planLine}
+      ${
+        relocating
+          ? `<div class="card" style="box-shadow:inset 0 0 0 3px var(--ok)"><div class="row">${tile('construction')}<div class="grow"><b>탑승 위치를 옮겨 주세요</b><span class="small">${h(b.relocation.message)}</span></div></div>
+        <dl class="kv" style="margin:0"><dt>기존 위치</dt><dd>${h(b.pickupPoint.label || '')}</dd><dt>새 위치</dt><dd style="color:var(--ok)">${h(b.relocation.proposed.label || '')}</dd></dl>
+        <button class="btn primary lg block" data-action="confirmRelocation">새 위치로 이동할게요</button><p class="tiny muted">확인하면 예약 위치가 바뀌고 차량에도 전달돼요.</p></div>`
+          : ''
+      }
+      ${b.previousPoint && !relocating ? banner('ok', 'check', '탑승 위치가 변경되었어요', `${h(b.previousPoint.label || '')} → ${h(b.pickupPoint.label || '')}, 차량에 전달됨`) : ''}
+      ${callReq ? `<div class="card" style="box-shadow:inset 0 0 0 3px var(--warn)"><div class="row">${tile('call')}<div class="grow"><b>운전자가 통화를 요청했어요</b><span class="small muted">앱 내 통화는 아직 실제로 연결되지 않아요. 테스트 화면만 열 수 있어요.</span></div></div><div class="grid2"><button class="btn block" data-action="openCallTest">통화 테스트 화면</button><button class="btn ghost block" data-action="dismissCall">닫기</button></div></div>` : ''}
+      <div class="card soft">
+        <dl class="kv" style="margin:0">
+          <dt>탑승 위치</dt><dd>${h(b.pickupPoint.label || '')}</dd>
+          <dt>희망 시간</dt><dd>${h(core.pickupTimeLabel(b.pickupTime))}</dd>
+          <dt>차량</dt><dd>${h(v.name)} (${h(v.plate)})</dd>
+          <dt>좌석</dt><dd>${b.seatId ? seatLabel(b.seatId) + (b.seatSource === 'driver' ? ' (운전자가 배정)' : '') : b.seatConflict ? '운전자가 배정할 예정' : '좌석 미정'}</dd>
+          <dt>요청</dt><dd>${fmtTime(b.createdAt)}</dd>
+          ${b.note ? `<dt>메모</dt><dd>${h(b.note)}</dd>` : ''}
+        </dl>
+      </div>
+      <div class="actions">
+        ${active ? `<button class="btn danger block" data-action="askCancel">픽업 취소</button>` : `<button class="btn primary lg block" data-action="go" data-view="map">다시 요청하기</button><button class="btn block" data-action="go" data-view="home">메인으로</button>`}
+      </div>
+    </div></div>
+  </div>` +
+        navbar()
+      );
+    }
+    function viewProfile() {
+      const u = me();
+      const vs = core.vehiclesFor(u.id);
+      return (
+        topbar('프로필') +
+        `<div class="content">
+    <div class="card"><div class="row"><span class="ictile" style="width:64px;height:64px;border-radius:20px">${ic(userIcon(u), 'lg')}</span><div class="grow"><h2>${h(u.name)}</h2><span class="small muted">${u.role === ROLE.DRIVER ? '운전자' : '동승자'}, ${u.isAdult ? '성인' : '어린이'}</span></div></div>
+      <div class="row wrap"><span class="chip muted">성인 여부: 직접 선택</span></div>
+    </div>
+    <div class="card"><div class="card-title">${ic('car', 'sm')}내 차량</div>${vs.length ? `<div class="list">${vs.map((v) => `<div class="item on-soft">${tile('car-front')}<span class="grow"><b>${h(v.name)}</b><span class="small muted">${v.model ? h(v.model) + ', ' : ''}${h(v.plate)} , ${v.ownerId === u.id ? '내가 운전' : core.canEditSettings(u.id, v.id) ? '설정 변경 가능' : '확인만 가능'}</span></span></div>`).join('')}</div>` : '<p class="small muted">아직 없어요.</p>'}</div>
+    <div class="card">
+      <label class="row" style="min-height:var(--tap)">${tile('sparkles')}<span class="grow"><b>큰 글씨</b><span class="small muted">글자와 버튼을 더 크게 보여요</span></span><input type="checkbox" class="toggle" id="f-bigtext" data-bind="bigText" ${ui.bigText ? 'checked' : ''}></label>
+      <div class="row">${tile('window')}<span class="grow"><b>화면 색</b><span class="small muted">차량 화면과 같은 색으로 맞춰요</span></span></div>
+      <div class="grid2"><button class="btn ${ui.theme === 'dark' ? 'primary' : ''}" data-action="pickTheme" data-v="dark">어둡게</button><button class="btn ${ui.theme === 'light' ? 'primary' : ''}" data-action="pickTheme" data-v="light">밝게</button></div>
+    </div>
+    <div class="card soft"><div class="card-title">${ic('wrench', 'sm')}개발 메뉴</div><p class="small muted"> 개발 메뉴에서 운전자 수락, 장애물, 50m 접근 같은 이벤트를 재현할 수 있어요.</p>
+      <button class="btn block" data-action="go" data-view="dev">${ic('gear', 'sm')}개발 메뉴 열기</button></div>
+    <div class="grid2"><button class="btn ghost block" data-action="switchAccount">계정 전환</button><button class="btn ghost block" data-action="signOut">로그아웃</button></div>
+  </div>` +
+        navbar()
+      );
+    }
+    const NOTIF_ICON = {
+      success: 'check',
+      error: 'cross',
+      warning: 'warning',
+      info: 'info',
+      invite: 'mail',
+      permission: 'key',
+      pickup: 'car',
+      call: 'call',
+    };
+    function viewNotifications() {
+      const u = me();
+      const list = core.state.notifications.filter((n) => n.userId === u.id);
+      return (
+        topbar('알림', { back: true }) +
+        `<div class="content">
+    ${list.length ? `<div class="list">${list.map((n) => `<div class="item" style="${n.read ? '' : 'box-shadow:inset 4px 0 0 var(--accent)'}">${tile(NOTIF_ICON[n.kind] || 'info')}<span class="grow"><b>${h(n.title)}</b><span class="small muted">${h(n.body)}</span></span><span class="tiny muted" style="flex:none">${fmtTime(n.at)}</span></div>`).join('')}</div>` : `<div class="hero">${ic('bell', 'xl')}<p class="muted">아직 알림이 없어요.</p></div>`}
+  </div>` +
+        navbar()
+      );
+    }
+
+    /* ---------- 운전자 ---------- */
+    function viewDriverHome() {
+      const u = me();
+      const vs = Object.values(core.state.vehicles).filter((v) => v.ownerId === u.id);
+      const reqs = core.pendingRequestsForDriver(u.id);
+      return (
+        topbar('카품 운전자') +
+        `<div class="content">
+    <div class="greet"><h1>${h(u.name)}님, 안녕하세요 ${ic('wave')}</h1><span class="statuspill ${reqs.some((b) => b.status === BOOKING.REQUESTED) ? 'wait' : ''}"><i></i>${statusText(u)}</span></div>
+    ${banner('info', 'computer', '차량 조정은 Pleos에서', '실제 좌석, 열선, 공조 조정은 Pleos 차량 앱이 담당해요. 여기서는 계정 연결과 동승자 초대, 권한을 관리해요.')}
+    <div class="card"><div class="card-title">${ic('bell', 'sm')}픽업 요청</div>${
+      reqs.length
+        ? `<div class="list">${reqs
+            .map((b) => {
+              const p = core.state.users[b.userId];
+              const v = core.state.vehicles[b.vehicleId];
+              return `<div class="member"><div class="row">${tile(userIcon(p))}<div class="grow"><b>${h(p.name)}${relationOf(v, p.id) ? ` (${h(relationOf(v, p.id))})` : ''}, ${h(v.name)}</b><span class="small muted">${h(b.pickupPoint.label || '')}, ${h(core.pickupTimeLabel(b.pickupTime))}, ${b.seatId ? seatLabel(b.seatId) : '좌석 미정'}</span><span class="small" style="color:var(--accent-2);font-weight:600">${bookingTitle(b)}</span>${b.note ? `<span class="small">"${h(b.note)}"</span>` : ''}</div></div>${b.status === BOOKING.REQUESTED ? `<div class="grid2"><button class="btn primary" data-action="decide" data-id="${b.id}" data-v="1">수락</button><button class="btn danger" data-action="decide" data-id="${b.id}" data-v="0">거절</button></div>` : `<div class="member-actions"><button class="btn sm" data-action="vehicleEvent" data-id="${b.id}" data-type="DRIVER_REMIND">재알림</button><button class="btn sm" data-action="vehicleEvent" data-id="${b.id}" data-type="DRIVER_CALL_REQUEST">통화 요청</button><button class="btn sm danger" data-action="vehicleEvent" data-id="${b.id}" data-type="DRIVER_CANCEL">픽업 취소</button></div>`}</div>`;
+            })
+            .join('')}</div>`
+        : '<p class="small muted">지금은 요청이 없어요. 동승자가 탑승을 요청하면 여기에 나타나요.</p>'
+    }</div>
+    <div class="card"><div class="card-title">${ic('car', 'sm')}내 차량</div><div class="list">${vs.map((v) => `<button class="item on-soft" data-action="go" data-view="dvehicles" data-vid="${v.id}">${tile('car-front')}<span class="grow"><b>${h(v.name)} (${h(v.plate)})</b><span class="small muted">동승자 ${Object.keys(v.members).length}명, ${core.state.pleosLinks[v.id] ? 'Pleos 연결됨' : 'Pleos 미연결'}</span></span>${SVG.chev}</button>`).join('')}</div></div>
+  </div>` +
+        navbar()
+      );
+    }
+    function viewDriverVehicles() {
+      const u = me();
+      const vs = Object.values(core.state.vehicles).filter((v) => v.ownerId === u.id);
+      const vid =
+        ui.driverVehicleId && vs.some((v) => v.id === ui.driverVehicleId) ? ui.driverVehicleId : vs[0] && vs[0].id;
+      ui.driverVehicleId = vid;
+      const v = core.state.vehicles[vid];
+      const members = Object.entries(v.members);
+      const others = Object.values(core.state.users).filter((x) => x.id !== u.id && !v.members[x.id]);
+      const capName = { seatPosition: '좌석 위치', recline: '등받이', heater: '열선', climate: '공조', window: '창문' };
+      const caps = Object.entries(v.capabilities)
+        .map(([k, on]) => `<span class="chip ${on ? 'ok' : 'muted'}">${capName[k]} ${on ? '지원' : '미지원'}</span>`)
+        .join('');
+      return (
+        topbar('차량과 동승자') +
+        `<div class="content">
+    <select class="input" id="f-dvehicle" data-bind="driverVehicle" aria-label="차량 선택">${vs.map((x) => `<option value="${x.id}" ${x.id === vid ? 'selected' : ''}>${h(x.name)} (${h(x.plate)})</option>`).join('')}</select>
+    ${v.model ? `<p class="small muted">${h(v.model)}</p>` : ''}
+    <div class="row wrap">${caps}<span class="chip ${core.state.pleosLinks[vid] ? 'teal' : 'muted'}">${core.state.pleosLinks[vid] ? 'Pleos 연결됨' : 'Pleos 미연결'}</span></div>
+    <div class="card"><div class="card-title">${ic('key', 'sm')}초대한 동승자</div><p class="small muted">설정 변경 권한은 차량별로 따로 관리돼요. 권한을 회수하면 동승자 화면에 바로 반영돼요.</p>
+      ${
+        members.length
+          ? `<div class="list">${members
+              .map(([uid, m]) => {
+                const p = core.state.users[uid];
+                if (!p) return '';
+                return `<div class="member"><div class="row">${tile(userIcon(p))}<div class="grow"><b>${h(p.name)}${m.relation ? ` (${h(m.relation)})` : ''}</b><span class="small muted">${p.isAdult ? '성인' : '어린이'}, ${m.canEdit ? '설정 변경 가능' : '확인만 가능'}</span></div></div><label class="perm-row"><span class="grow">설정 변경 권한</span><input type="checkbox" class="toggle" data-action-change="perm" data-uid="${uid}" ${m.canEdit ? 'checked' : ''} aria-label="${h(p.name)} 설정 변경 권한"></label><button class="btn sm ghost block" data-action="removeMember" data-uid="${uid}">초대 해제</button></div>`;
+              })
+              .join('')}</div>`
+          : '<p class="small muted">아직 초대한 동승자가 없어요.</p>'
+      }
+    </div>
+    <div class="card"><div class="card-title">${ic('mail', 'sm')}동승자 초대</div>
+      ${others.length ? `<div class="list">${others.map((p) => `<div class="item on-soft">${tile(userIcon(p))}<span class="grow"><b>${h(p.name)}</b><span class="small muted">${p.isAdult ? '성인' : '어린이'}</span></span><button class="btn sm primary" data-action="invite" data-uid="${p.id}" style="flex:none">초대</button></div>`).join('')}</div>` : '<p class="small muted">초대할 수 있는 사용자가 모두 초대되었어요. 실제 서비스에서는 초대 코드, 연락처로 초대해요.</p>'}
+    </div>
+  </div>` +
+        navbar()
+      );
+    }
+    function viewDriverQr() {
+      const u = me();
+      const vs = Object.values(core.state.vehicles).filter((v) => v.ownerId === u.id);
+      const vid = ui.pleosVehicle && vs.some((v) => v.id === ui.pleosVehicle) ? ui.pleosVehicle : vs[0] && vs[0].id;
+      ui.pleosVehicle = vid;
+      // 차량의 Pleos 앱이 QR을 띄우고 있으면 그 QR을 쓴다(시연 무대, 같은 기기의 다른 창). 없으면 화면 안 시뮬레이터.
+      const shared = core.state.pleosQr && core.state.pleosQr[vid];
+      const sharedLive = shared && (Date.now() - shared.issuedAt) / 1000 < shared.ttlSec;
+      if (sharedLive && (!DemoPleosQr.token || DemoPleosQr.token.code !== shared.code))
+        DemoPleosQr.token = Object.assign({}, shared, { fromPleos: true });
+      const tok = DemoPleosQr.token && DemoPleosQr.token.vehicleId === vid ? DemoPleosQr.token : null;
+      const rem = DemoPleosQr.remaining();
+      const link = core.state.pleosLinks[vid];
+      return (
+        topbar('Pleos 연결') +
+        `<div class="content">
+    <select class="input" id="f-qvehicle" data-bind="pleosVehicle" aria-label="차량 선택">${vs.map((x) => `<option value="${x.id}" ${x.id === vid ? 'selected' : ''}>${h(x.name)} (${h(x.plate)})</option>`).join('')}</select>
+    ${link ? `${banner('ok', 'link', '연결됨', `${fmtTime(link.linkedAt)}에 Pleos와 연결했어요. 코드 ${h(link.tokenCode)}`)}<button class="btn ghost block" data-action="unlinkPleos">연결 해제</button>` : ''}
+    <div class="card" style="box-shadow:inset 0 0 0 2px var(--line);border:none">
+      <div class="row">${tile('computer')}<div class="grow"><b>${tok && tok.fromPleos ? '차량 Pleos 화면의 QR' : 'Pleos 화면'}</b><span class="small muted">${tok && tok.fromPleos ? '차량에 켜진 카품 Pleos 앱이 띄운 QR이에요.' : '실제로는 차량의 Pleos 앱이 QR을 표시하고 주기적으로 새로 발급해요.'}</span></div></div>
+      ${tok ? `${qrSVG(tok.code)}<div class="row wrap" style="justify-content:center"><span class="chip ${rem > 0 ? 'teal' : 'bad'}" id="qr-timer">${rem > 0 ? `남은 시간 ${rem}초` : '만료됨'}</span><span class="chip muted">코드 ${h(tok.code)}</span></div>` : '<p class="small muted" style="text-align:center">QR이 아직 없어요.</p>'}
+      <div class="grid2"><button class="btn block" data-action="issueQr">${tok ? '새 QR 발급' : 'QR 표시'}</button><button class="btn ghost block" data-action="expireQr" ${tok ? '' : 'disabled'}>만료시키기 (테스트)</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">${ic('phone', 'sm')}모바일에서 스캔하기</div>
+      <p class="small muted">실제 앱에서는 카메라로 QR을 읽어요. 읽은 뒤에도 유효성 확인과 내 승인을 거쳐야 연결돼요.</p>
+      <button class="btn primary lg block" data-action="scanQr" ${tok ? '' : 'disabled'}>${ic('camera', 'sm')}QR 스캔</button>
+    </div>
+  </div>` +
+        navbar()
+      );
+    }
+    function qrSVG(code) {
+      // 코드 문자열을 해시해 21×21 패턴을 만든다. 실제 QR 규격은 아니며 체험 표시용이다.
+      let seed = 0;
+      for (const ch of code) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+      const rnd = () => {
+        seed = (seed * 1103515245 + 12345) >>> 0;
+        return (seed >>> 16) & 1;
+      };
+      const n = 21,
+        cells = [];
+      const finder = (x, y) => {
+        for (let i = 0; i < 7; i++)
+          for (let j = 0; j < 7; j++) {
+            const edge = i === 0 || j === 0 || i === 6 || j === 6;
+            const core_ = i >= 2 && i <= 4 && j >= 2 && j <= 4;
+            if (edge || core_) cells.push(`<rect x="${x + j}" y="${y + i}" width="1" height="1"/>`);
+          }
+      };
+      finder(0, 0);
+      finder(n - 7, 0);
+      finder(0, n - 7);
+      for (let y = 0; y < n; y++)
+        for (let x = 0; x < n; x++) {
+          const inF = (x < 8 && y < 8) || (x >= n - 8 && y < 8) || (x < 8 && y >= n - 8);
+          if (!inF && rnd()) cells.push(`<rect x="${x}" y="${y}" width="1" height="1"/>`);
+        }
+      return `<svg class="qr" viewBox="-1 -1 23 23" shape-rendering="crispEdges" role="img" aria-label="QR"><rect x="-1" y="-1" width="23" height="23" fill="#fff"/><g fill="#111">${cells.join('')}</g></svg>`;
+    }
+
+    /* ---------- 개발 메뉴 ---------- */
+    function viewDev() {
+      const u = me();
+      const passengers = Object.values(core.state.users).filter((x) => x.role !== ROLE.DRIVER);
+      const target =
+        ui.devTargetUser && core.state.users[ui.devTargetUser]
+          ? core.state.users[ui.devTargetUser]
+          : u.role !== ROLE.DRIVER
+            ? u
+            : passengers[0];
+      ui.devTargetUser = target && target.id;
+      const b = target && core.getActiveBooking(target.id);
+      const vid =
+        target &&
+        (ui.draftVehicleId && core.invitedVehiclesFor(target.id).some((v) => v.id === ui.draftVehicleId)
+          ? ui.draftVehicleId
+          : (core.invitedVehiclesFor(target.id)[0] || {}).id);
+      const v = vid && core.state.vehicles[vid];
+      const ev = (type, label, disabled, icn) =>
+        `<button class="btn block" data-action="devEvent" data-type="${type}" ${disabled ? 'disabled' : ''}>${icn ? ic(icn, 'sm') : ''}${label}</button>`;
+      const can = (states) => b && states.includes(b.status);
+      return (
+        topbar('개발 메뉴', { back: true }) +
+        `<div class="content">
+    <p class="small muted">실제 서버, Pleos가 보낼 이벤트를 수동으로 재현해요. 모든 이벤트는 코어의 상태 규칙을 거쳐 반영되므로, 종료된 예약에는 적용되지 않아요.</p>
+    <div class="card"><div class="card-title">대상 동승자</div><select class="input" id="f-devuser" data-bind="devTarget">${passengers.map((p) => `<option value="${p.id}" ${target && p.id === target.id ? 'selected' : ''}>${h(p.name)} (${p.isAdult ? '성인' : '어린이'})</option>`).join('')}</select>
+      <p class="small">${b ? `진행 중 예약: <b>${bookingTitle(b)}</b>, ${h(b.pickupPoint.label || '')}` : '진행 중 예약 없음'}</p></div>
+    <div class="card"><div class="card-title">픽업 이벤트</div>
+      <div class="grid2">${ev('DRIVER_ACCEPT', '운전자 수락', !can(['REQUESTED']), 'check')}${ev('DRIVER_REJECT', '운전자 거절', !can(['REQUESTED']), 'hand')}${ev('OBSTACLE_REPORTED', '장애물 발생', !can(['ACCEPTED', 'APPROACHING']), 'construction')}${ev('VEHICLE_NEAR_50M', '50m 접근', !can(['ACCEPTED']), 'car')}${ev('VEHICLE_ARRIVED', '차량 도착', !can(['ACCEPTED', 'APPROACHING']), 'pin')}${ev('BOARDING_COMPLETE', '탑승 완료', !can(['APPROACHING', 'ARRIVED']), 'party')}${ev('DRIVER_REMIND', '운전자 재알림', !b, 'bell')}${ev('DRIVER_CALL_REQUEST', '통화 요청', !b, 'call')}${ev('DRIVER_CANCEL', '운전자 취소', !b, 'cross')}</div>
+      <p class="tiny muted">버튼은 현재 상태에서 의미 있는 것만 활성화돼요. 늦은 이벤트 테스트는 아래 "강제 전송"을 쓰세요.</p>
+      <div class="grid2"><button class="btn ghost block" data-action="devEvent" data-type="VEHICLE_ARRIVED" data-force="1">강제: 도착 이벤트</button><button class="btn ghost block" data-action="devEvent" data-type="DRIVER_ACCEPT" data-force="1">강제: 수락 이벤트</button></div>
+    </div>
+    <div class="card"><div class="card-title">권한, 차량 응답</div><p class="small muted">${target ? h(target.name) : ''}, ${v ? h(v.name) : '차량 없음'}, ${v ? (core.canEditSettings(target.id, v.id) ? '변경 권한 있음' : '권한 없음') : ''}</p>
+      <div class="grid2"><button class="btn block" data-action="devPerm" data-v="0" ${!v ? 'disabled' : ''}>권한 회수</button><button class="btn block" data-action="devPerm" data-v="1" ${!v ? 'disabled' : ''}>권한 부여</button><button class="btn block" data-action="devApply" data-v="1" ${!v ? 'disabled' : ''}>차량 적용 성공 응답</button><button class="btn block" data-action="devApply" data-v="0" ${!v ? 'disabled' : ''}>차량 적용 실패 응답</button></div>
+    </div>
+    <div class="card"><div class="card-title">기타</div><div class="grid2"><button class="btn block" data-action="devLocReset">위치 권한 초기화</button><button class="btn block" data-action="expireQr">QR 만료</button><button class="btn danger block" data-action="askReset">데모 데이터 초기화</button><button class="btn block" data-action="go" data-view="profile">프로필로</button></div></div>
+    <div class="card"><div class="card-title">차량 게이트웨이로 보낸 메시지 (최근)</div><div class="logbox">${
+      DemoGateway.sent
+        .slice(0, 8)
+        .map((m) => `${fmtTime(m.at)} ${m.type} ${h(JSON.stringify(m.payload)).slice(0, 120)}`)
+        .join('\n') || '(없음)'
+    }</div></div>
+    <div class="card"><div class="card-title">이벤트 로그</div><div class="logbox">${core.state.log
+      .slice(0, 30)
+      .map((l) => `${fmtTime(l.at)} ${h(l.label)}`)
+      .join('\n')}</div></div>
+  </div>`
+      );
+    }
+
+    /* ---------- 시트 ---------- */
+    function sheetHTML() {
+      const s = ui.sheet;
+      if (!s) return '';
+      const head = (icn, title) => `<div class="sheet-ic">${ic(icn, 'xl')}</div><h3>${title}</h3>`;
+      let body = '';
+      if (s.type === 'locperm')
+        body = `${head('pin', '내 위치를 사용할까요?')}<p class="small muted">지금 계신 곳을 탑승 위치로 써요. 거부해도 지도를 눌러 직접 정할 수 있어요.</p><div class="grid2"><button class="btn primary lg" data-action="locDecide" data-v="1">허용</button><button class="btn lg" data-action="locDecide" data-v="0">거부</button></div>`;
+      else if (s.type === 'cancel')
+        body = `${head('cross', '픽업을 취소할까요?')}<p class="small muted">운전자에게 취소가 전달돼요. 나중에 다시 요청할 수 있어요.</p><div class="grid2"><button class="btn danger lg" data-action="doCancel">취소할게요</button><button class="btn lg" data-action="closeSheet">계속 기다릴게요</button></div>`;
+      else if (s.type === 'reset')
+        body = `${head('warning', '데모 데이터를 초기화할까요?')}<p class="small muted">가입한 계정, 저장한 설정, 예약 기록이 모두 지워지고 데모 계정만 남아요.</p><div class="grid2"><button class="btn danger lg" data-action="doReset">초기화</button><button class="btn lg" data-action="closeSheet">취소</button></div>`;
+      else if (s.type === 'qr')
+        body = s.result.ok
+          ? `${head('link', '이 차량에 연결할까요?')}<div class="item on-soft">${tile('car-front')}<span class="grow"><b>${h(s.result.vehicle.name)}, ${h(s.result.vehicle.plate)}</b><span class="small muted">QR 코드 ${h(s.token.code)}, 유효 확인됨</span></span></div><p class="small muted">QR을 읽기만 해서는 연결되지 않아요. 아래에서 승인해야 Pleos와 계정이 연결돼요.</p><div class="grid2"><button class="btn primary lg" data-action="approveQr">승인하고 연결</button><button class="btn lg" data-action="closeSheet">취소</button></div>`
+          : `${head('stop-x', '인증에 실패했어요')}${banner('bad', 'cross', s.result.reason === 'EXPIRED' ? 'QR이 만료되었어요' : '연결할 수 없어요', h(s.result.message))}<div class="grid2"><button class="btn primary lg" data-action="retryQr">새 QR 발급 후 다시 스캔</button><button class="btn lg" data-action="closeSheet">닫기</button></div>`;
+      else if (s.type === 'call')
+        body = `${head('call', '앱 통화, 테스트 화면')}${banner('warn', 'warning', '실제 통화가 연결되지 않아요', '통화 서비스가 연결되면 이 화면이 실제 통화 화면으로 바뀌어요. 지금은 화면 구성만 확인할 수 있어요.')}<div class="item on-soft">${tile('adult')}<span class="grow"><b>${h(s.name)} 운전자</b><span class="small muted">연결 안 됨 (테스트)</span></span></div><button class="btn lg block" data-action="closeSheet">닫기</button>`;
+      else if (s.type === 'discard')
+        body = `${head('warning', '저장하지 않은 변경이 있어요')}<p class="small muted">이대로 나가면 바꾼 값이 사라져요.</p><div class="grid2"><button class="btn danger lg" data-action="discardAndGo" data-view="${s.view}">버리고 이동</button><button class="btn lg" data-action="closeSheet">계속 수정</button></div>`;
+      else if (s.type === 'error')
+        body = `${head(s.title === '권한이 없어요' ? 'lock' : 'warning', h(s.title || '진행할 수 없어요'))}<p>${h(s.message)}</p><button class="btn lg block" data-action="closeSheet">확인</button>`;
+      return `<div class="overlay" data-action="closeSheetBg"><div class="sheet" role="dialog" aria-modal="true"><div class="handle"></div>${body}</div></div>`;
+    }
+    function toastHTML() {
+      const t = ui.toast;
+      if (!t) return '';
+      return `<div class="toast" role="status">${ic(NOTIF_ICON[t.kind] || 'info', 'md')}<div><b>${h(t.title)}</b><span class="small">${h(t.body)}</span></div><button data-action="closeToast" aria-label="닫기">✕</button></div>`;
+    }
+    function showToast(n) {
+      ui.toast = n;
+      clearTimeout(ui.toastTimer);
+      ui.toastTimer = setTimeout(() => {
+        ui.toast = null;
+        renderOverlays();
+      }, 4500);
+      renderOverlays();
+    }
+    function showError(e) {
+      ui.sheet = {
+        type: 'error',
+        title: e.name === 'PermissionError' ? '권한이 없어요' : '진행할 수 없어요',
+        message: e.message || String(e),
+      };
+      render();
+    }
+
+    /* ===================== 렌더 ===================== */
+    function resolveView() {
+      if (!ui.theme) return 'theme'; // 첫 실행: 테마부터 고른다
+      const u = me();
+      if (!u) return ui.view === 'signup' ? 'signup' : 'welcome';
+      if (!u.role) return 'role';
+      const driverViews = ['dhome', 'dvehicles', 'dqr', 'profile', 'notifications', 'dev'];
+      const passViews = ['home', 'settings', 'booking', 'map', 'waiting', 'profile', 'notifications', 'dev'];
+      const allowed = u.role === ROLE.DRIVER ? driverViews : passViews;
+      if (!allowed.includes(ui.view)) ui.view = u.role === ROLE.DRIVER ? 'dhome' : 'home';
+      return ui.view;
+    }
+    function render() {
+      const v = resolveView();
+      ui.view = v;
+      const fn = {
+        theme: viewTheme,
+        welcome: viewWelcome,
+        signup: viewSignup,
+        role: viewRole,
+        home: viewHome,
+        settings: viewSettings,
+        booking: viewBooking,
+        map: viewMap,
+        waiting: viewWaiting,
+        profile: viewProfile,
+        notifications: viewNotifications,
+        dhome: viewDriverHome,
+        dvehicles: viewDriverVehicles,
+        dqr: viewDriverQr,
+        dev: viewDev,
+      }[v];
+      const scrollTop = (app.querySelector('.content') || {}).scrollTop || 0;
+      app.innerHTML = fn() + `<div id="overlays">${sheetHTML()}${toastHTML()}</div>`;
+      const content = app.querySelector('.content');
+      if (content && ui._keepScroll) {
+        content.scrollTop = scrollTop;
+      }
+      ui._keepScroll = false;
+      afterRender();
+      savePrefs();
+    }
+    function renderOverlays() {
+      const o = document.getElementById('overlays');
+      if (o) o.innerHTML = sheetHTML() + toastHTML();
+    }
+    function afterRender() {
+      const u = me();
+      app.querySelectorAll('.seatwrap').forEach((w) => {
+        const vid = u ? currentVehicleId() : null;
+        const caps = vid ? core.state.vehicles[vid].capabilities : null;
+        const d =
+          ui.view === 'settings' && ui.draft
+            ? ui.draft
+            : u && vid
+              ? core.getProfile(u.id, vid).saved
+              : DEFAULT_PROFILE();
+        mountSeat(w, d, caps);
+      });
+      app.querySelectorAll('input.slider').forEach(setSliderFill);
+      const myLoc = DemoLocation.status === 'granted' ? DemoLocation.point() : null;
+      const pick = document.getElementById('map-pick');
+      if (pick) {
+        GeoMap.mount(pick, 'pick', { pin: ui.pin, me: myLoc }, (pt) => {
+          ui.pin = { lat: +pt.lat.toFixed(6), lng: +pt.lng.toFixed(6), label: GEO.labelFor(pt) };
+          ui._keepScroll = true;
+          render();
+        });
+      }
+      const wait = document.getElementById('map-wait');
+      if (wait && u) {
+        const b = core.getActiveBooking(u.id) || core.bookingsFor(u.id)[0];
+        const relocating = b.relocation && !b.relocation.confirmed;
+        GeoMap.mount(wait, 'wait', {
+          bookingId: b.id,
+          vehicleId: b.vehicleId,
+          pin: b.pickupPoint,
+          prevPin: b.previousPoint,
+          newPin: relocating ? b.relocation.proposed : null,
+          me: myLoc,
+          ring: b.status === BOOKING.APPROACHING ? b.pickupPoint : null,
+          showCar: carTargetDist(b.status, 0) !== null,
+        });
+        GeoMap.syncCar(b);
+      }
+      if (ui.view === 'dqr') {
+        clearInterval(ui.qrTimer);
+        ui.qrTimer = setInterval(() => {
+          const el = document.getElementById('qr-timer');
+          if (!el) return;
+          const r = DemoPleosQr.remaining();
+          el.textContent = r > 0 ? `남은 시간 ${r}초` : '만료됨';
+          el.className = 'chip ' + (r > 0 ? 'teal' : 'bad');
+        }, 1000);
+      } else clearInterval(ui.qrTimer);
+    }
+
+    /* ===================== 이벤트 처리 ===================== */
+    function go(view) {
+      if (
+        ui.view === 'settings' &&
+        view !== 'settings' &&
+        ui.draft &&
+        !draftEquals(ui.draft, core.getProfile(me().id, ui.draft._vid).saved) &&
+        core.canEditSettings(me().id, ui.draft._vid)
+      ) {
+        ui.sheet = { type: 'discard', view };
+        render();
+        return;
+      }
+      if (view !== 'settings') ui.draft = null;
+      if (view === 'map') {
+        if (core.getActiveBooking(me().id)) {
+          view = 'waiting';
+        } else {
+          ui.bookingSeat = null;
+        }
+      }
+      ui.prevView = ui.view;
+      ui.view = view;
+      ui.sheet = null;
+      render();
+      const c = app.querySelector('.content');
+      if (c) c.scrollTop = 0;
+    }
+    function refreshSettingsLive(d) {
+      // 슬라이더는 전체 재렌더 없이 비주얼과 값 표시만 갱신
+      updateSeatVisual(document.getElementById('set-seat'), d, core.state.vehicles[d._vid].capabilities);
+      const chips = document.getElementById('set-chips');
+      if (chips) chips.innerHTML = seatStatusChips(d, core.state.vehicles[d._vid].capabilities);
+      const vals = {
+        seatPosition: posLabel(d.seatPosition),
+        recline: reclineLabel(d.recline),
+        heater: d.heater.on ? d.heater.level + '단' : '끔',
+        climate: d.climate.on ? d.climate.temp + '°, 바람 ' + d.climate.fan : '끔',
+        window: d.window.open ? d.window.open + '% 열림' : '닫힘',
+      };
+      Object.keys(vals).forEach((k) => {
+        const el = app.querySelector(`[data-val="${k}"]`);
+        if (el) el.textContent = vals[k];
+      });
+      app
+        .querySelectorAll('[data-action="setRecline"]')
+        .forEach((b) => b.classList.toggle('on', Math.abs(d.recline - Number(b.dataset.v)) < 8));
+      // 저장 상태 표시와 버튼 활성 여부도 다시 그리지 않고 갱신(드래그 중 요소 교체 방지)
+      const u = me();
+      const prof = core.getProfile(u.id, d._vid);
+      const dirty = !draftEquals(d, prof.saved);
+      const lock = !core.canEditSettings(u.id, d._vid);
+      const dc = document.getElementById('dirty-chip');
+      if (dc) {
+        dc.textContent = dirty ? '저장하지 않은 변경' : '저장된 값';
+        dc.className = 'chip ' + (dirty ? 'warn' : 'muted');
+      }
+      app.querySelectorAll('[data-action="saveProfile"]').forEach((b) => {
+        b.disabled = lock || !dirty;
+      });
+      const ra = app.querySelector('[data-action="requestApply"]');
+      if (ra) ra.disabled = lock || !prof.savedAt || dirty || prof.apply.status === APPLY.SENT;
+    }
+    const actions = {
+      go(el) {
+        if (el.dataset.vid) ui.driverVehicleId = el.dataset.vid;
+        go(el.dataset.view);
+      },
+      back() {
+        const u = me();
+        const map = {
+          signup: 'welcome',
+          map: 'booking',
+          waiting: 'booking',
+          notifications: u && u.role === ROLE.DRIVER ? 'dhome' : 'home',
+          dev: 'profile',
+        };
+        go(map[ui.view] || ui.prevView || (u && u.role === ROLE.DRIVER ? 'dhome' : 'home'));
+      },
+      switchUser(el) {
+        core.switchUser(el.dataset.id);
+        ui.draft = null;
+        ui.pin = null;
+        const u = me();
+        ui.view = u && u.role === ROLE.PASSENGER && core.getActiveBooking(u.id) ? 'waiting' : null;
+        ui.lastNotifId = (core.state.notifications[0] || {}).id;
+        render();
+      },
+      switchAccount() {
+        core.signOut();
+        ui.view = 'welcome';
+        ui.draft = null;
+        render();
+      },
+      signOut() {
+        core.signOut();
+        ui.view = 'welcome';
+        ui.draft = null;
+        render();
+      },
+      setAdult(el) {
+        ui.signup.isAdult = el.dataset.v === '1';
+        render();
+      },
+      signup() {
+        try {
+          core.signUp({ name: ui.signup.name, isAdult: ui.signup.isAdult });
+          ui.signup = { name: '', isAdult: null };
+          ui.view = 'role';
+          render();
+        } catch (e) {
+          showError(e);
+        }
+      },
+      setRole(el) {
+        try {
+          core.setRole(me().id, el.dataset.role);
+          ui.view = null;
+          render();
+        } catch (e) {
+          showError(e);
+        }
+      },
+      notifications() {
+        core.markNotificationsRead(me().id);
+        go('notifications');
+      },
+      closeSheet() {
+        ui.sheet = null;
+        render();
+      },
+      closeSheetBg(el, ev) {
+        if (ev.target === el) {
+          ui.sheet = null;
+          render();
+        }
+      },
+      closeToast() {
+        ui.toast = null;
+        renderOverlays();
+      },
+      // 설정
+      setLevel(el) {
+        const d = ensureDraft();
+        setPath(d, el.dataset.key, Number(el.dataset.v));
+        ui._keepScroll = true;
+        render();
+      },
+      setTemp(el) {
+        const d = ensureDraft();
+        d.climate.temp = Math.max(16, Math.min(30, d.climate.temp + Number(el.dataset.v)));
+        ui._keepScroll = true;
+        render();
+      },
+      setRecline(el) {
+        const d = ensureDraft();
+        d.recline = Number(el.dataset.v);
+        const s = document.getElementById('f-recline');
+        if (s) s.value = d.recline;
+        refreshSettingsLive(d);
+        updateDirtyChips();
+      },
+      discardDraft() {
+        ui.draft = null;
+        render();
+      },
+      discardAndGo(el) {
+        ui.draft = null;
+        ui.sheet = null;
+        go(el.dataset.view);
+      },
+      saveProfile() {
+        const u = me();
+        const d = ensureDraft();
+        try {
+          const payload = clone(d);
+          delete payload._vid;
+          core.saveProfile(u.id, d._vid, payload);
+          ui.draft = null;
+          showToast({ kind: 'success', title: '저장했어요', body: '차량 적용은 별도로 요청해야 해요.' });
+          render();
+        } catch (e) {
+          showError(e);
+        }
+      },
+      requestApply() {
+        const u = me();
+        try {
+          core.requestApply(u.id, currentVehicleId());
+          showToast({ kind: 'info', title: '차량에 적용을 요청했어요', body: '차량 응답을 기다리는 중이에요.' });
+          render();
+        } catch (e) {
+          showError(e);
+        }
+      },
+      pickSeat(el) {
+        const u = me();
+        const seat = el.dataset.seat;
+        if (ui.view === 'map') {
+          ui.bookingSeat = seat;
+          ui._keepScroll = true;
+          render();
+          return;
+        }
+        const d = ensureDraft();
+        if (!core.canEditSettings(u.id, d._vid)) {
+          showError(new Core.PermissionError('설정 변경 권한이 없어요. 좌석 배정은 운전자가 도와드려요.'));
+          return;
+        }
+        d.seatId = d.seatId === seat ? null : seat;
+        if (!d.seatId) d.rememberSeat = false;
+        ui._keepScroll = true;
+        render();
+      },
+      // 예약
+      useMyLocation() {
+        if (DemoLocation.status === 'granted') {
+          const p = DemoLocation.point();
+          ui.pin = { lat: p.lat, lng: p.lng, label: GEO.labelFor(p) };
+          GeoMap.centerOn(p);
+          ui._keepScroll = true;
+          render();
+          return;
+        }
+        if (DemoLocation.status === 'denied') {
+          showToast({
+            kind: 'info',
+            title: '위치 권한이 거부되어 있어요',
+            body: '지도를 눌러 직접 위치를 지정할 수 있어요.',
+          });
+          return;
+        }
+        DemoLocation.request();
+      },
+      locDecide(el) {
+        DemoLocation.status = el.dataset.v === '1' ? 'granted' : 'denied';
+        ui.sheet = null;
+        if (DemoLocation.status === 'granted') {
+          const p = DemoLocation.point();
+          ui.pin = { lat: p.lat, lng: p.lng, label: GEO.labelFor(p) };
+          GeoMap.centerOn(p);
+        } else showToast({ kind: 'info', title: '괜찮아요', body: '지도를 눌러 직접 탑승 위치를 지정해 주세요.' });
+        render();
+      },
+      confirmBooking() {
+        const u = me();
+        try {
+          const r = core.createBooking(u.id, currentVehicleId(), ui.pin, {
+            seatId: ui.bookingSeat,
+            note: ui.bookingNote,
+            pickupTime: bookingTimePayload(ui.bookingTime),
+          });
+          ui.bookingNote = '';
+          ui.bookingTime = { mode: 'asap' };
+          if (!r.created)
+            showToast({ kind: 'info', title: '이미 진행 중인 예약이 있어요', body: '기존 예약 화면으로 이동했어요.' });
+          else showToast({ kind: 'pickup', title: '예약을 요청했어요', body: '운전자 확인을 기다려 주세요.' });
+          go('waiting');
+        } catch (e) {
+          showError(e);
+        }
+      },
+      setBookingTime(el) {
+        ui.bookingTime = el.dataset.mode === 'in' ? { mode: 'in', min: Number(el.dataset.min) } : { mode: 'asap' };
+        ui._keepScroll = true;
+        render();
+      },
+      pickTheme(el) {
+        ui.theme = el.dataset.v;
+        applyTheme();
+        GeoMap.themeChanged();
+        savePrefs();
+        ui._keepScroll = true;
+        render();
+      },
+      askCancel() {
+        ui.sheet = { type: 'cancel' };
+        render();
+      },
+      doCancel() {
+        const u = me();
+        const b = core.getActiveBooking(u.id);
+        ui.sheet = null;
+        if (b) core.cancelBooking(u.id, b.id);
+        render();
+      },
+      confirmRelocation() {
+        const u = me();
+        const b = core.getActiveBooking(u.id);
+        if (b) {
+          core.confirmRelocation(u.id, b.id);
+          showToast({ kind: 'success', title: '탑승 위치를 바꿨어요', body: '차량에도 새 위치를 전달했어요.' });
+        }
+        render();
+      },
+      openCallTest() {
+        const u = me();
+        const b = core.getActiveBooking(u.id);
+        const v = b && core.state.vehicles[b.vehicleId];
+        const d = v && core.state.users[v.ownerId];
+        ui.sheet = { type: 'call', name: d ? d.name : '운전자' };
+        render();
+      },
+      dismissCall() {
+        const u = me();
+        core.state.notifications.forEach((n) => {
+          if (n.userId === u.id && n.callRequest) n.read = true;
+        });
+        core.emit('notifications');
+        render();
+      },
+      // 운전자
+      decide(el) {
+        try {
+          core.driverDecide(me().id, el.dataset.id, el.dataset.v === '1');
+          render();
+        } catch (e) {
+          showError(e);
+        }
+      },
+      vehicleEvent(el) {
+        core.handleVehicleEvent({
+          type: el.dataset.type,
+          bookingId: el.dataset.id,
+          reason: el.dataset.type === 'DRIVER_CANCEL' ? '운전자가 픽업을 취소했어요.' : undefined,
+        });
+        render();
+      },
+      invite(el) {
+        try {
+          core.invite(me().id, ui.driverVehicleId, el.dataset.uid);
+          render();
+        } catch (e) {
+          showError(e);
+        }
+      },
+      removeMember(el) {
+        try {
+          core.removeMember(me().id, ui.driverVehicleId, el.dataset.uid);
+          render();
+        } catch (e) {
+          showError(e);
+        }
+      },
+      issueQr() {
+        DemoPleosQr.issue(ui.pleosVehicle);
+        render();
+      },
+      expireQr() {
+        DemoPleosQr.expireNow();
+        showToast({ kind: 'warning', title: 'QR을 만료시켰어요', body: '이제 스캔하면 실패해야 해요.' });
+        render();
+      },
+      scanQr() {
+        const tok = DemoPleosQr.token;
+        const r = core.validatePleosToken(me().id, tok);
+        ui.sheet = { type: 'qr', token: tok, result: r };
+        render();
+      },
+      approveQr() {
+        const r = core.confirmPleosLink(me().id, ui.sheet.token);
+        if (r.ok) {
+          ui.sheet = null;
+          showToast({ kind: 'success', title: 'Pleos 연결 완료', body: `${r.vehicle.name} 차량 앱과 연결했어요.` });
+        } else {
+          ui.sheet = { type: 'qr', token: ui.sheet.token, result: r };
+        }
+        render();
+      },
+      retryQr() {
+        DemoPleosQr.issue(ui.pleosVehicle);
+        ui.sheet = null;
+        render();
+      },
+      unlinkPleos() {
+        core.unlinkPleos(me().id, ui.pleosVehicle);
+        render();
+      },
+      // 개발 메뉴
+      devEvent(el) {
+        const t = core.state.users[ui.devTargetUser];
+        const b = t && (core.getActiveBooking(t.id) || (el.dataset.force ? core.bookingsFor(t.id)[0] : null));
+        if (!b) {
+          showToast({
+            kind: 'warning',
+            title: '대상 예약이 없어요',
+            body: '동승자 계정으로 먼저 예약을 요청해 주세요.',
+          });
+          return;
+        }
+        const evt = { type: el.dataset.type, bookingId: b.id };
+        if (evt.type === 'OBSTACLE_REPORTED') {
+          const r = GeoMap.route;
+          const np = r ? GEO.beforeEnd(r, 45) : { lat: b.pickupPoint.lat + 0.0004, lng: b.pickupPoint.lng };
+          evt.point = { lat: +np.lat.toFixed(6), lng: +np.lng.toFixed(6), label: GEO.labelFor(np) + ' (앞쪽 약 45m)' };
+          evt.message = '탑승 장소에 주정차 차량이 있어요. 앞쪽 지정된 탑승 장소로 조금 이동해 주세요.';
+        }
+        if (evt.type === 'DRIVER_CANCEL') evt.reason = '운전자가 픽업을 취소했어요.';
+        if (evt.type === 'DRIVER_REJECT') evt.reason = '지금은 픽업이 어려워요. 다음에 다시 요청해 주세요.';
+        const r = core.handleVehicleEvent(evt);
+        showToast({
+          kind: r.applied ? 'success' : 'warning',
+          title: r.applied ? '이벤트 반영됨' : '이벤트 무시됨',
+          body: r.applied
+            ? `${evt.type} → ${bookingTitle(b)}`
+            : `예약 상태가 ${bookingTitle(b)}이라 ${evt.type}을 적용하지 않았어요.`,
+        });
+        render();
+      },
+      devPerm(el) {
+        const t = core.state.users[ui.devTargetUser];
+        const vs = core.invitedVehiclesFor(t.id);
+        const vid =
+          ui.draftVehicleId && vs.some((v) => v.id === ui.draftVehicleId) ? ui.draftVehicleId : (vs[0] || {}).id;
+        const v = core.state.vehicles[vid];
+        try {
+          core.setPermission(v.ownerId, vid, t.id, el.dataset.v === '1');
+          render();
+        } catch (e) {
+          showError(e);
+        }
+      },
+      devApply(el) {
+        const t = core.state.users[ui.devTargetUser];
+        const vs = core.invitedVehiclesFor(t.id);
+        const vid =
+          ui.draftVehicleId && vs.some((v) => v.id === ui.draftVehicleId) ? ui.draftVehicleId : (vs[0] || {}).id;
+        const r = core.handleVehicleEvent({
+          type: 'APPLY_RESULT',
+          userId: t.id,
+          vehicleId: vid,
+          ok: el.dataset.v === '1',
+          message: el.dataset.v === '1' ? null : '차량이 오프라인이에요.',
+        });
+        if (!r.applied)
+          showToast({
+            kind: 'warning',
+            title: '대기 중인 적용 요청이 없어요',
+            body: '설정 화면에서 먼저 "차량에 적용 요청"을 눌러 주세요.',
+          });
+        render();
+      },
+      devLocReset() {
+        DemoLocation.status = 'unknown';
+        showToast({ kind: 'info', title: '위치 권한을 초기화했어요', body: '다음 예약에서 다시 물어봐요.' });
+        render();
+      },
+      askReset() {
+        ui.sheet = { type: 'reset' };
+        render();
+      },
+      doReset() {
+        Storage.clear();
+        DemoGateway.sent.length = 0;
+        DemoLocation.status = 'unknown';
+        DemoPleosQr.token = null;
+        core.seedDemo();
+        ui.sheet = null;
+        ui.view = 'welcome';
+        ui.draft = null;
+        ui.pin = null;
+        render();
+      },
+    };
+    app.addEventListener('click', (ev) => {
+      const el = ev.target.closest('[data-action]');
+      if (!el) return;
+      const a = el.dataset.action;
+      if (!a || !actions[a]) return;
+      if (el.disabled) return;
+      if (a === 'closeSheetBg') {
+        actions[a](el, ev);
+        return;
+      }
+      ev.preventDefault();
+      actions[a](el, ev);
+    });
+    function setPath(obj, path, val) {
+      const ks = path.split('.');
+      let o = obj;
+      for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]];
+      o[ks[ks.length - 1]] = val;
+    }
+    app.addEventListener('input', (ev) => {
+      const el = ev.target;
+      const b = el.dataset.bind;
+      if (!b) return;
+      if (el.tagName === 'SELECT') return; // select는 change 이벤트에서 처리
+      if (b === 'signup.name') {
+        ui.signup.name = el.value;
+        const btn = app.querySelector('[data-action="signup"]');
+        if (btn) btn.disabled = !(ui.signup.name.trim() && ui.signup.isAdult !== null);
+        return;
+      }
+      if (b === 'bookingNote') {
+        ui.bookingNote = el.value;
+        return;
+      }
+      if (b === 'bookingTimeH' || b === 'bookingTimeM') {
+        // 숫자만 받는다. 시(0~23)와 분(0~59)이 모두 맞으면 그 시각으로 정한다
+        el.value = el.value.replace(/[^0-9]/g, '').slice(0, 2);
+        const hv = (document.getElementById('f-bth') || {}).value || '',
+          mv = (document.getElementById('f-btm') || {}).value || '';
+        const H = Number(hv),
+          Mi = mv === '' ? 0 : Number(mv),
+          l = document.getElementById('btime-label');
+        if (hv !== '' && H >= 0 && H <= 23 && Mi >= 0 && Mi <= 59) {
+          ui.bookingTime = { mode: 'at', hm: String(H).padStart(2, '0') + ':' + String(Mi).padStart(2, '0') };
+          if (l) l.textContent = Core.fmtHM(bookingTimeAt(ui.bookingTime)) + '쯤 탈게요';
+          app.querySelectorAll('[data-action="setBookingTime"]').forEach((x) => x.classList.remove('on'));
+        } else if (l && hv !== '') l.textContent = '시는 0~23, 분은 0~59로 입력해 주세요';
+        if (b === 'bookingTimeH' && el.value.length === 2) {
+          const m = document.getElementById('f-btm');
+          if (m) m.focus();
+        }
+        return;
+      }
+      if (ui.view === 'settings') {
+        const d = ensureDraft();
+        if (!d) return;
+        if (b === 'weightKg') {
+          d.weightKg = el.value === '' ? null : Number(el.value);
+          updateDirtyChips();
+          return;
+        }
+        const v = el.type === 'checkbox' ? el.checked : Number(el.value);
+        if (el.classList.contains('slider')) setSliderFill(el);
+        setPath(d, b, v);
+        refreshSettingsLive(d);
+        if (el.type === 'checkbox') {
+          ui._keepScroll = true;
+          render();
+        }
+      }
+    });
+    // 슬라이더를 놓았을 때(또는 숫자 입력 후) 저장 상태 칩과 버튼을 갱신
+    app.addEventListener('change', (ev) => {
+      const el = ev.target;
+      if (ui.view === 'settings' && el.type === 'range') {
+        updateDirtyChips();
+      }
+    });
+    function updateDirtyChips() {
+      ui._keepScroll = true;
+      const scroll = (app.querySelector('.content') || {}).scrollTop;
+      const focusId = document.activeElement && document.activeElement.id;
+      render();
+      const c = app.querySelector('.content');
+      if (c) c.scrollTop = scroll;
+      if (focusId) {
+        const f = document.getElementById(focusId);
+        if (f && f.type === 'number') {
+          f.focus({ preventScroll: true });
+        }
+      }
+    }
+    app.addEventListener('change', (ev) => {
+      const el = ev.target;
+      const b = el.dataset.bind;
+      if (el.dataset.actionChange === 'perm') {
+        try {
+          core.setPermission(me().id, ui.driverVehicleId, el.dataset.uid, el.checked);
+          render();
+        } catch (e) {
+          showError(e);
+        }
+        return;
+      }
+      if (b === 'vehicle') {
+        ui.draftVehicleId = el.value;
+        ui.draft = null;
+        ui.bookingSeat = null;
+        render();
+      } else if (b === 'driverVehicle') {
+        ui.driverVehicleId = el.value;
+        render();
+      } else if (b === 'pleosVehicle') {
+        ui.pleosVehicle = el.value;
+        render();
+      } else if (b === 'devTarget') {
+        ui.devTargetUser = el.value;
+        render();
+      }
+      // 시간 입력칸은 입력하는 동안 이미 반영되므로, 포커스가 빠질 때 다시 그리지 않는다(바로 다음 탭이 씹히지 않게)
+      else if (b === 'bigText') {
+        ui.bigText = el.checked;
+        document.documentElement.style.fontSize = ui.bigText ? '118%' : '';
+        savePrefs();
+        render();
+      }
+    });
+    // 키보드가 열릴 때 입력란이 가려지지 않도록
+    app.addEventListener('focusin', (ev) => {
+      const el = ev.target;
+      if (el.matches('input[type="text"],input[type="number"],input:not([type]),select'))
+        setTimeout(() => {
+          try {
+            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          } catch (e) {}
+        }, 250);
+    });
+
+    // 코어 변경 → 화면 갱신 + 새 알림 토스트. 권한 회수 등은 열려 있는 설정 화면에 즉시 반영된다.
+    core.subscribe((state, reason) => {
+      const u = me();
+      if (u) {
+        const latest = state.notifications.find((n) => n.userId === u.id);
+        if (latest && latest.id !== ui.lastNotifId && !latest.read && Date.now() - latest.at < 3000) {
+          ui.lastNotifId = latest.id;
+          showToast(latest);
+        }
+      }
+      if (reason === 'permission' && ui.view === 'settings' && ui.draft) {
+        const can = core.canEditSettings(u.id, ui.draft._vid);
+        if (!can) {
+          ui.draft = null;
+        } // 권한이 없어진 초안은 버리고 저장값을 잠금 상태로 표시
+      }
+      if (reason === 'sync') {
+        // 다른 화면(Pleos 등)에서 온 변경. 글자를 입력하는 중이면 입력이 끝난 뒤 다시 그린다.
+        const a = document.activeElement;
+        if (a && app.contains(a) && a.matches('input:not([type=range]):not([type=checkbox]),textarea')) {
+          ui.pendingRender = true;
+          return;
+        }
+        // 대기 중이던 동승자가 진행 중 예약을 갖게 되면(다른 화면에서 요청) 대기 화면으로
+        if (u && u.role === ROLE.PASSENGER && ui.view === 'booking' && core.getActiveBooking(u.id)) ui.view = 'waiting';
+      }
+      if (
+        [
+          'permission',
+          'booking',
+          'members',
+          'apply',
+          'profile',
+          'pleos',
+          'pleosQr',
+          'route',
+          'notifications',
+          'sync',
+        ].includes(reason)
+      ) {
+        ui._keepScroll = true;
+        render();
+      }
+    });
+    app.addEventListener('focusout', () => {
+      if (ui.pendingRender) {
+        ui.pendingRender = false;
+        setTimeout(() => {
+          ui._keepScroll = true;
+          render();
+        }, 0);
+      }
+    });
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => GeoMap.themeChanged());
+
+    SYNC.onLive((d) => GeoMap.live(d));
+    // 디버그, 자동 테스트용 훅 (화면 로직은 이 객체에 의존하지 않는다)
+    window.__carpoom = {
+      core,
+      ui,
+      render,
+      DemoLocation,
+      DemoPleosQr,
+      DemoGateway,
+      seat3d: Seat3D,
+      geo: GEO,
+      map: GeoMap,
+    };
+
+    // 시작: 저장된 상태 복원. 진행 중 예약이 있으면 동승자는 대기 화면으로.
+    (function start() {
+      const u = me();
+      if (u && u.role === ROLE.PASSENGER && core.getActiveBooking(u.id) && !ui.view) ui.view = 'waiting';
+      ui.lastNotifId = (core.state.notifications[0] || {}).id;
+      if (ui.splash) showSplash();
+      render();
+    })();
+  })();
+</script>

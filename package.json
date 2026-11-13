@@ -1,0 +1,24 @@
+{
+  "name": "carpoom",
+  "version": "1.0.0",
+  "private": true,
+  "description": "카품(Car Poom): 가족 픽업 예약과 좌석별 맞춤 설정을 잇는 모바일 앱과 Pleos Connect 차량 앱 프로토타입",
+  "scripts": {
+    "build": "node build.js",
+    "pretest": "node build.js",
+    "test": "node test/core.test.js && node test/ui.test.js && node test/pleos.test.js",
+    "test:core": "node test/core.test.js",
+    "test:ui": "node test/ui.test.js",
+    "test:pleos": "node test/pleos.test.js",
+    "video": "node build.js && node test/stage-video.js",
+    "icons": "node tools/fetch-fluent-icons.js && node tools/render-icons.js",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "playwright-core": "^1.58.0",
+    "prettier": "3.3.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<style>html,body{margin:0;height:100%;overflow:hidden}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>카품 시연 무대</title>
+<style>
+  /* 시연 무대: 동승자 휴대폰 2대 + 차량 Pleos 화면을 한 화면(1920×1080)에 띄우고 상태를 실시간으로 잇는다(영상 녹화용).
+   각 화면은 iframe이며, 변경은 이 페이지가 다른 화면으로 전달한다(체험용. 실제 서비스에서는 서버가 담당).
+   기기 틀 안의 화면(.scr)은 iframe을 축소한 크기와 정확히 같아서, 화면이 틀 가운데에 딱 맞는다. */
+  :root {
+    --bg: #0e0f12;
+    --fg: #f2f4f7;
+    --muted: #8e959f;
+    --accent: #2f8cff;
+    color-scheme: dark;
+    --ps: 0.82; /* 휴대폰 축소 비율: 390×844 → 319.8×692.1 */
+    --cs: 0.675; /* 차량 화면 축소 비율: 1600×900 → 1080×607.5 */
+  }
+  * {
+    box-sizing: border-box;
+  }
+  html,
+  body {
+    margin: 0;
+    height: 100%;
+    background: radial-gradient(120% 90% at 50% 0%, #23262c 0%, #16171a 55%, var(--bg) 100%);
+    color: var(--fg);
+    font-family: 'Asta Sans', 'Malgun Gothic', system-ui, sans-serif;
+    overflow: hidden;
+  }
+  .stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    transform-origin: 0 0;
+  }
+  header {
+    position: absolute;
+    left: 40px;
+    top: 40px;
+    right: 40px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  header b {
+    font-size: 30px;
+    letter-spacing: -0.02em;
+  }
+  header span {
+    font-size: 18px;
+    color: var(--muted);
+  }
+  header .live {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 17px;
+    color: var(--muted);
+  }
+  header .live i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: b 1.4s ease-in-out infinite;
+  }
+  @keyframes b {
+    50% {
+      opacity: 0.3;
+    }
+  }
+  .dev {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .dev .cap {
+    font-size: 18px;
+    color: var(--muted);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .dev .cap b {
+    color: var(--fg);
+  }
+  /* 기기 틀: 테두리(padding) + 화면(.scr). 화면 크기 = iframe 크기 × 축소 비율 */
+  .phone {
+    padding: 10px;
+    border-radius: 50px;
+    background: linear-gradient(160deg, #2c2f35, #0b0c0e 40%);
+    box-shadow:
+      0 0 0 1.5px #3a3e46,
+      0 30px 60px rgba(0, 0, 0, 0.6);
+  }
+  .phone .scr {
+    position: relative;
+    width: calc(390px * var(--ps));
+    height: calc(844px * var(--ps));
+    border-radius: 40px;
+    overflow: hidden;
+    background: #000;
+  }
+  .carframe {
+    padding: 10px;
+    border-radius: 26px;
+    background: linear-gradient(160deg, #2c2f35, #0b0c0e 40%);
+    box-shadow:
+      0 0 0 1.5px #3a3e46,
+      0 30px 60px rgba(0, 0, 0, 0.6);
+  }
+  .carframe .scr {
+    position: relative;
+    width: calc(1600px * var(--cs));
+    height: calc(900px * var(--cs));
+    border-radius: 16px;
+    overflow: hidden;
+    background: #000;
+  }
+  .scr iframe {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border: 0;
+    transform-origin: 0 0;
+    display: block;
+  }
+  .phone iframe {
+    width: 390px;
+    height: 844px;
+    transform: scale(var(--ps));
+  }
+  .carframe iframe {
+    width: 1600px;
+    height: 900px;
+    transform: scale(var(--cs));
+  }
+  .links {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .links a {
+    color: var(--muted);
+  }
+</style>
+<div class="stage" id="stage">
+  <header>
+    <b>카품 Car Poom</b><span>동승자 휴대폰 ↔ 차량 Pleos 화면 실시간 연동 시연</span
+    ><span class="live"><i></i>같은 상태를 실시간으로 공유합니다</span>
+  </header>
+  <div class="dev" style="left: 40px; top: 150px">
+    <div class="phone">
+      <div class="scr">
+        <iframe
+          id="f-dad"
+          title="아버지 휴대폰"
+          src="carpoom-standalone.html?user=u_youngsoo&amp;nosplash=1&amp;theme=light"
+        ></iframe>
+      </div>
+    </div>
+    <div class="cap"><b>영수 (아버지)</b> 데이케어센터, 밝은 화면</div>
+  </div>
+  <div class="dev" style="left: 402px; top: 150px">
+    <div class="phone">
+      <div class="scr">
+        <iframe id="f-kid" title="딸 휴대폰" src="carpoom-standalone.html?user=u_haneul&amp;nosplash=1&amp;theme=dark"></iframe>
+      </div>
+    </div>
+    <div class="cap"><b>하늘 (딸)</b> 학교, 어두운 화면</div>
+  </div>
+  <div class="dev" style="left: 780px; top: 192px">
+    <div class="carframe">
+      <div class="scr">
+        <iframe
+          id="f-car"
+          title="차량 Pleos 화면"
+          src="pleos-standalone.html?vehicle=v_ioniq6&amp;theme=dark&amp;embed=1"
+        ></iframe>
+      </div>
+    </div>
+    <div class="cap"><b>지민 (운전자, 워킹맘)</b> 아이오닉 6 Pleos Connect</div>
+  </div>
+  <div class="links">
+    각 화면은 따로 열 수도 있습니다: <a href="carpoom-standalone.html" target="_blank">모바일 앱</a>,
+    <a href="pleos-standalone.html" target="_blank">Pleos 앱</a>
+  </div>
+</div>
+<script>
+  (function () {
+    'use strict';
+    const stage = document.getElementById('stage');
+    const frames = () => [...document.querySelectorAll('iframe')];
+    function fit() {
+      const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+      stage.style.transform = `translate(${(innerWidth - 1920 * s) / 2}px,${(innerHeight - 1080 * s) / 2}px) scale(${s})`;
+    }
+    addEventListener('resize', fit);
+    fit();
+    // 한 화면에서 바뀐 상태를 나머지 화면으로 전달한다(가장 최신 rev만)
+    let latest = null;
+    addEventListener('message', (e) => {
+      const d = e.data;
+      if (!d) return;
+      if (d.__carpoomLive) {
+        frames().forEach((f) => {
+          if (f.contentWindow !== e.source) {
+            try {
+              f.contentWindow.postMessage(d, '*');
+            } catch (_) {}
+          }
+        });
+        return;
+      }
+      if (d.__carpoom && d.state) {
+        if (!latest || (d.state.rev || 0) > (latest.state.rev || 0)) latest = d;
+        frames().forEach((f) => {
+          if (f.contentWindow !== e.source) {
+            try {
+              f.contentWindow.postMessage(d, '*');
+            } catch (_) {}
+          }
+        });
+      } else if (d.__carpoomHello) {
+        if (latest) {
+          try {
+            e.source.postMessage(latest, '*');
+          } catch (_) {}
+        }
+        frames().forEach((f) => {
+          if (f.contentWindow !== e.source) {
+            try {
+              f.contentWindow.postMessage(d, '*');
+            } catch (_) {}
+          }
+        });
+      }
+    });
+    window.__stage = {
+      frames,
+      get latest() {
+        return latest;
+      },
+    };
+  })();
+</script>
+
+</body>
+</html>
