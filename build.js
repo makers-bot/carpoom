@@ -11,13 +11,19 @@ const read = (...p) => fs.readFileSync(path.join(root, ...p), 'utf8');
 const fontsCss = read('assets', 'fonts.css');
 const iconDir = path.join(root, 'assets', 'icons');
 const icons = {};
-for (const f of fs.readdirSync(iconDir).filter((f) => f.endsWith('.webp'))) {
+// 폴더 목록 순서는 파일 시스템마다 달라서, 이름순으로 정렬해 어디서 빌드해도 결과가 같게 한다
+const webpFiles = (dir) =>
+  fs
+    .readdirSync(dir)
+    .filter((f) => f.endsWith('.webp'))
+    .sort();
+for (const f of webpFiles(iconDir)) {
   icons[f.replace(/\.webp$/, '')] =
     'data:image/webp;base64,' + fs.readFileSync(path.join(iconDir, f)).toString('base64');
 }
 // Pleos 공식 차량 이미지(assets/pleos/*.webp)도 같은 표에 'pleos/이름'으로 넣는다
-for (const f of fs.readdirSync(path.join(root, 'assets', 'pleos')).filter((f) => f.endsWith('.webp'))) {
-  icons['pleos/' + f.replace(/.webp$/, '')] =
+for (const f of webpFiles(path.join(root, 'assets', 'pleos'))) {
+  icons['pleos/' + f.replace(/\.webp$/, '')] =
     'data:image/webp;base64,' + fs.readFileSync(path.join(root, 'assets', 'pleos', f)).toString('base64');
 }
 const VENDOR = {
