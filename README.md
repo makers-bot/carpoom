@@ -1,133 +1,126 @@
 # 카품 (Car Poom)
 
-가족이 휴대폰으로 **픽업 위치, 희망 시간, 좌석**을 요청하면, 운전자 차량의 **Pleos Connect 앱**이 요청을 받아 **픽업 순서를 정하고 길을 안내**합니다. 탑승한 사람이 차량 화면에서 본인을 고르면 **그 좌석에 저장해 둔 좌석, 열선, 공조, 창문 설정을 적용**합니다.
+![카품 엠블럼과 팀 이름](docs/images/team.jpg)
 
-현대자동차그룹 차량용 앱 개발 공모전(Pleos Connect) 출품작의 동작 프로토타입입니다. 세 화면이 같은 도메인 코어(`carpoom-core.js`)를 쓰고, 상태를 실시간으로 주고받습니다.
+시연 영상 맨 마지막에 나오는 화면입니다. 타원 안에 기울어진 H를 넣고, 그 위로 안전벨트처럼 휜 선이 지나가게 그렸습니다. 카품은 차(Car)와 품을 붙인 이름이라, 벨트 선도 H를 감싸 안는 모양으로 잡았습니다. 아래 적힌 티키타카(TikiTa_Car)가 저희 팀 이름입니다.
 
-| 화면          | 파일           | 내용                                                                                                   |
-| ------------- | -------------- | ------------------------------------------------------------------------------------------------------ |
-| 모바일 앱     | `carpoom.html` | 동승자(성인, 어린이)와 운전자 계정. 탑승 예약, 내 자리 설정, 초대와 변경 권한, Pleos QR 연결           |
-| Pleos 차량 앱 | `pleos.html`   | 16:9 차량 화면. QR 로그인, 픽업 요청 수락, 픽업 순서 계획, 내비게이션, 좌석 배정, 탑승 확인, 설정 적용 |
-| 시연 무대     | `stage.html`   | 휴대폰 2대와 Pleos 화면을 한 화면(1920×1080)에 띄우고 실시간으로 연동                                  |
+현대자동차그룹 차량용 앱 개발 공모전(Pleos Connect)에 낸 작품의 동작 시안을 이 저장소에 올렸습니다.
 
-## 바로 실행하기
+## 어떤 서비스인가요
 
-빌드된 단일 파일이 `dist/`에 들어 있어 설치 없이 브라우저로 열 수 있습니다.
+남의 차를 얻어 탈 때 시트를 젖히거나 열선을 켜는 게 은근히 눈치 보입니다. 운전하는 사람은 운전대를 잡은 채로 "에어컨 좀 줄여 줄래?" 같은 부탁까지 챙겨야 하고요. 카품은 이 두 가지를 덜어 보려고 만들었습니다.
 
-- `dist/stage.html`: 시연 무대(권장). Pleos 화면의 "휴대폰으로 스캔"으로 시작합니다.
-- `dist/carpoom-standalone.html`: 모바일 앱
-- `dist/pleos-standalone.html`: Pleos 차량 앱
+탈 사람이 휴대폰으로 어디서, 언제, 어느 자리에 탈지 보내면 운전자 차의 Pleos 화면에 요청이 뜹니다. 태울 사람이 여럿이면 누구부터 데리러 갈지 정해서 길을 안내합니다. 차에 탄 사람이 차량 화면에서 자기 이름을 누르면, 미리 저장해 둔 좌석 위치와 등받이, 열선, 공조, 창문 설정이 그 자리에 들어갑니다.
 
-지도 타일과 Asta Sans 서체는 인터넷이 필요합니다. 인터넷이 없으면 단순 지도와 내장 서체로 대신 그립니다.
+![시연 화면](docs/images/demo.jpg)
 
-화면 옵션(주소 뒤 `?`):
+왼쪽 두 대가 동승자 휴대폰(아버지, 딸)이고 오른쪽이 운전자 차의 Pleos 화면입니다. 시연 영상은 이 화면을 실제로 조작하면서 녹화했습니다.
 
-- 모바일: `user=u_youngsoo`(계정 고정), `theme=dark` 또는 `light`, `nosplash=1`
-- Pleos: `vehicle=v_ioniq6b`, `theme=light`
+## 들어 있는 것
 
-## 개발
+화면은 세 개이고, 모두 `carpoom-core.js` 하나를 같이 씁니다.
 
-Node.js 18 이상이 필요합니다.
+- `carpoom.html` 휴대폰 앱. 탑승 예약, 내 자리 설정, 운전자의 초대와 변경 권한 관리, Pleos QR 연결
+- `pleos.html` 차량 화면(Pleos Connect, 16:9). QR 로그인, 픽업 수락, 순서 정하기, 길 안내, 좌석 배정, 탑승 확인과 설정 적용
+- `stage.html` 위 사진처럼 휴대폰 두 대와 차량 화면을 한 화면에 띄워 서로 이어 주는 시연용 페이지
+
+## 실행해 보기
+
+`dist/` 폴더에 한 파일로 묶어 둔 결과가 있어서 설치 없이 브라우저로 열면 됩니다. `dist/stage.html`을 열고 차량 화면의 "지민님 휴대폰으로 스캔"을 누르면 시작합니다. 휴대폰 앱만 보려면 `dist/carpoom-standalone.html`, 차량 화면만 보려면 `dist/pleos-standalone.html`을 열면 됩니다.
+
+지도와 Asta Sans 서체는 인터넷에서 받아 옵니다. 오프라인이면 단순한 지도와 내장 서체로 대신 나옵니다.
+
+주소 뒤에 옵션을 붙일 수 있습니다. 휴대폰 앱은 `?user=u_youngsoo`(계정 고정), `?theme=dark` 또는 `light`, `?nosplash=1`을, 차량 화면은 `?vehicle=v_ioniq6b`, `?theme=light`를 받습니다.
+
+## 고쳐 보려면
+
+Node.js 18 이상이 있으면 됩니다.
 
 ```bash
-npm install          # 테스트용 playwright-core, 포매터 prettier
-npm run build        # dist/ 다시 만들기
-npm test             # 빌드 후 테스트 3종 실행
-npm run video        # 시연 영상 녹화(ffmpeg 필요, demo/에 저장)
-npm run format       # 코드 정렬(prettier)
+npm install       # 테스트용 playwright-core, 코드 정렬용 prettier
+npm run build     # dist/ 다시 만들기
+npm test          # 빌드하고 테스트 세 묶음 실행
+npm run video     # 시연 영상 녹화(ffmpeg 필요, demo/에 저장)
+npm run format    # 코드 정렬
 ```
 
-| 명령                 | 내용                                            |
-| -------------------- | ----------------------------------------------- |
-| `npm run test:core`  | 도메인 규칙 39건(권한, 예약 상태, 픽업 순서 등) |
-| `npm run test:ui`    | 모바일 앱 흐름과 화면 107건(브라우저)           |
-| `npm run test:pleos` | Pleos 앱과 시연 무대 연동 33건(브라우저)        |
-| `npm run icons`      | 3D 아이콘 다시 만들기(`tools/`)                 |
+테스트는 세 묶음입니다. 권한, 예약 상태, 픽업 순서 같은 규칙 39개(`npm run test:core`), 휴대폰 앱 흐름 107개(`npm run test:ui`), 차량 화면과 연동 33개(`npm run test:pleos`)입니다. 브라우저 테스트는 설치된 Chrome을 Playwright로 띄웁니다. Playwright나 브라우저가 다른 곳에 있으면 `PLAYWRIGHT_PATH`, `CHROME_PATH`로 알려 주면 됩니다. 영상 녹화에는 ffmpeg가 필요하고, `FFMPEG_PATH`와 `DEMO_TIME`(화면 시각, 기본 17:40)을 쓸 수 있습니다.
 
-브라우저 테스트는 `test/browser.js`가 Playwright를 찾아 설치된 Chrome으로 실행합니다. 다른 위치의 Playwright나 브라우저를 쓰려면 `PLAYWRIGHT_PATH`, `CHROME_PATH` 환경변수로 지정합니다. 영상 녹화는 `FFMPEG_PATH`(ffmpeg 위치), `DEMO_TIME`(화면 시각, 기본 17:40), `VIDEO_NAME`(파일 이름)을 받습니다.
+## 시연 시나리오
 
-## 데모 시나리오
+지원서에 쓴 장면 그대로입니다. 퇴근한 워킹맘이 데이케어센터에 있는 아버지와 초등학교에 있는 딸을 태우고 집으로 갑니다. 아버지는 "지금 바로", 딸은 시간을 정해서 뒷좌석으로 요청합니다. 장소는 서울 서초동이고, 사람 이름과 차 번호판은 지어낸 것입니다.
 
-퇴근한 운전자가 데이케어센터의 아버지와 학교의 딸을 태우고 집으로 가는 가족 픽업입니다. 지역은 서울 서초동이고, 인물과 차량 번호는 모두 가상입니다.
+데모 계정 셋을 바꿔 가며 볼 수 있습니다.
 
-| 계정         | 역할               | 첫째 차(12가 3456)            | 둘째 차(34나 7890) | 시나리오                       |
-| ------------ | ------------------ | ----------------------------- | ------------------ | ------------------------------ |
-| `u_jimin`    | 운전자             | 소유                          | 소유               | 퇴근 후 회사 주차장에서 출발   |
-| `u_youngsoo` | 동승자(아버지)     | 초대와 변경 권한, 조수석 기억 | 초대 없음          | 데이케어센터 앞, 지금 바로     |
-| `u_haneul`   | 동승자(딸, 어린이) | 초대만, 확인만 가능           | 초대와 변경 권한   | 초등학교 앞, 시간 지정, 뒷좌석 |
+| 계정         | 누구         | 12가 3456 차                 | 34나 7890 차   |
+| ------------ | ------------ | ---------------------------- | -------------- |
+| `u_jimin`    | 운전자       | 주인                         | 주인           |
+| `u_youngsoo` | 아버지       | 초대받음, 설정 변경 가능     | 초대 안 받음   |
+| `u_haneul`   | 딸(초등학생) | 초대받음, 설정은 보기만 가능 | 설정 변경 가능 |
 
-차량은 Pleos 개발자 사이트(document.pleos.ai) 공식 디자인 가이드의 기준 차량인 **아이오닉 6**를 씁니다. 화면의 차 이미지도 같은 가이드에서 가져왔고, 모바일 좌석 화면의 반투명 차체는 아이오닉 6 제원(전장 4,855mm, 축거 2,950mm, 전고 1,495mm)을 따릅니다. 차량별 지원 항목은 체험용 가정이며, 실제 앱에서는 Vehicle SDK의 지원 여부 확인 결과를 씁니다.
+차를 두 대 넣은 건 권한이 차마다 따로라는 걸 보여 주려고서입니다. 딸은 첫째 차에서는 설정을 보기만 하고, 둘째 차에서는 직접 바꿀 수 있습니다. 어른 동승자도 같은 규칙을 따릅니다.
 
-## 주요 기능
+차는 Pleos 개발자 사이트(document.pleos.ai) 공식 디자인 가이드에 나오는 아이오닉 6로 맞췄습니다. 가이드에 들어 있는 차 그림이 모두 아이오닉 6라 이름과 이미지를 거기에 맞췄고, 휴대폰 좌석 화면의 반투명 차체도 아이오닉 6 크기(전장 4,855mm, 축거 2,950mm, 전고 1,495mm)로 그렸습니다.
 
-- **탑승 예약**: 지도에서 탑승 위치를 고르고 희망 시간(지금 바로, 10분, 20분, 30분 뒤, 직접 입력)과 좌석을 정해 요청합니다.
-- **내 자리 설정**: 좌석 위치, 등받이, 열선, 공조, 창문을 3D 좌석으로 보며 조절합니다. 저장한 값과 차량 적용 상태를 따로 보여 줍니다.
-- **초대와 변경 권한**: 운전자가 차량별로 동승자를 초대하고 설정 변경 권한을 주거나 회수합니다. 성인과 어린이에게 같은 규칙이 적용되며, 권한 검사는 화면뿐 아니라 저장 처리에서도 합니다.
-- **픽업 순서 최적화**: 모든 순서를 비교해 끝나는 시각과 늦게 도착한 시간을 함께 따져 가장 좋은 순서를 고르고, Pleos 화면에 이유를 보여 줍니다.
-- **탑승 확인과 설정 적용**: 좌석 점유 감지, 본인 선택, 앉은 좌석 확인 뒤 저장한 설정을 적용합니다. 예정 좌석과 다르면 배정을 바꿀지 묻습니다.
-- **탑승 위치 변경**: 탑승 장소에 장애물이 있다는 정보가 오면 새 위치를 안내하고, 동승자가 확인하면 차량 경로를 바로 다시 계산합니다.
-- **Pleos QR 연결**: Pleos가 30초마다 새 QR을 띄우고, 운전자 휴대폰이 스캔한 뒤 승인해야 연결됩니다. 만료된 QR은 실패하고 다시 스캔하도록 안내합니다.
+## Pleos SDK는 어디에 쓰나
 
-## Pleos SDK 사용 계획과 제약
+이 저장소는 웹으로 만든 동작 시안이라 SDK를 직접 부르지는 않습니다. 대신 실제 앱이라면 어떤 API를 부를지 차량 화면의 적용 내역에 같이 띄워 두었습니다. 공식 문서를 보고 정리하면 이렇습니다.
 
-공식 문서(document.pleos.ai)를 기준으로 정리했습니다.
+| 하는 일           | API                                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------------------- |
+| 좌석 앞뒤, 등받이 | `moveSeatForeAft`, `moveSeatBackrestAngle`(`MoveControl`), `getCurrentSeatXxxPosition`, `selectSeatMemory` |
+| 열선, 통풍        | `setHvacSeatTemperature`, `setHvacSeatVentilation`                                                         |
+| 자리별 공조       | `setHvacDual(false)` 다음 `setHvacTemperature(area)`, `setHvacFanSpeed`                                    |
+| 창문              | `setWindowPosition(area)`                                                                                  |
+| 누가 앉았는지     | `registerSeatOccupancy`, `getCurrentSeatOccupancy`                                                         |
+| 차가 지원하는지   | `checkXxxCapabilities`, `AreaBounds`                                                                       |
+| 경로와 경유지     | NaviHelper `requestRouteWithWaypoints`, `onWayPointArrived`                                                |
+| 50m 앞 알림       | FusedLocation `addProximityAlert`(반경 50m, ENTER)                                                         |
 
-| 기능              | 사용 API                                                                                                    | 프로토타입에서          |
-| ----------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------- |
-| 좌석 앞뒤, 등받이 | `moveSeatForeAft`, `moveSeatBackrestAngle`(`MoveControl`) + `getCurrentSeatXxxPosition`, `selectSeatMemory` | 적용 내역에 표시        |
-| 열선, 통풍        | `setHvacSeatTemperature`, `setHvacSeatVentilation`                                                          | 적용 내역에 표시        |
-| 좌석별 공조       | `setHvacDual(false)` 후 `setHvacTemperature(area)`, `setHvacFanSpeed`                                       | 적용 내역에 표시        |
-| 창문              | `setWindowPosition(area)`                                                                                   | 적용 내역에 표시        |
-| 탑승 감지         | `registerSeatOccupancy`, `getCurrentSeatOccupancy`                                                          | 착석 감지 단계          |
-| 지원 범위         | `checkXxxCapabilities` → `AreaBounds`                                                                       | 차량별 미지원 항목 잠금 |
-| 경로, 경유지      | NaviHelper `requestRouteWithWaypoints`, `onWayPointArrived`                                                 | 순서 카드, 내비게이션   |
-| 50m 접근          | FusedLocation `addProximityAlert`(반경 50m, ENTER)                                                          | 50m 접근 알림           |
+문서를 읽다가 알게 된 제약도 반영했습니다.
 
-구현할 때 지켜야 할 제약:
+- 시트와 차량 설정은 주행 중에 바꿀 수 없습니다. 그래서 설정은 차가 서 있을 때(탑승 확인 때)만 넣고, 달리는 동안에는 좌석 조정을 막았습니다.
+- 좌석 위치와 등받이는 "몇 도로 맞춰라" 같은 절대값 API가 없습니다. 지금 위치를 보면서 목표까지 움직이거나 차량 메모리를 불러와야 합니다.
+- NaviHelper는 경유지를 두 곳까지만 받습니다. 정류장이 더 많으면 한 곳에 도착할 때마다 다음 구간을 다시 요청합니다.
+- 차량 제어 권한은 App Market 사전 승인이 필요합니다. 승인 전까지는 에뮬레이터와 Virtual Console에서 확인합니다.
 
-- **시트와 차량 설정은 모든 지역에서 주행 중 금지**입니다. 그래서 설정은 정차(탑승 확인) 때만 적용하고, 주행 중에는 좌석 조정을 막습니다.
-- **좌석 위치와 등받이는 절대값 지정 API가 없습니다.** 현재 위치를 보며 목표까지 움직이거나 차량 메모리 슬롯을 불러옵니다.
-- **NaviHelper 경유지는 최대 2개**입니다. 정류장이 더 많으면 도착 이벤트마다 다음 구간을 이어서 요청합니다.
-- **차량 제어 퍼미션은 App Market 사전 승인이 필요**합니다. 에뮬레이터와 Virtual Console에서 검증하고, 실차 배포는 승인 범위 안에서 진행합니다.
+## 아직 흉내만 낸 부분
 
-## 프로토타입과 실제 연동
+시연이 끊기지 않게 서버 없이 한 기기 안에서 돌아가도록 만들었습니다. 실제 서비스로 가려면 아래를 바꿔야 합니다.
 
-| 항목                        | 프로토타입                                                   | 실제 서비스                       |
-| --------------------------- | ------------------------------------------------------------ | --------------------------------- |
-| 상태 공유                   | 같은 기기 안 postMessage, BroadcastChannel, localStorage     | 서버 API와 WebSocket, 푸시        |
-| 지도와 경로                 | OpenFreeMap 타일, 시나리오 경로 내장, 그 밖은 OSRM 공개 서버 | Pleos NaviHelper, 모바일 지도 SDK |
-| 차량 위치                   | 경로를 따라 움직이는 체험 차량                               | FusedLocation SDK                 |
-| 좌석 점유와 설정 적용       | 감지와 적용 내역 표시                                        | Vehicle SDK(승인된 퍼미션)        |
-| 본인, 연령 인증, 통화, 푸시 | 체험 표시(실제 인증으로 취급하지 않음)                       | 인증 제공자, VoIP, FCM/APNs       |
+- 화면끼리 상태를 주고받는 부분은 지금 브라우저 안(postMessage, BroadcastChannel, localStorage)에서만 오갑니다. 실제로는 서버와 푸시가 맡습니다.
+- 지도는 OpenFreeMap 타일과 미리 받아 둔 경로를 쓰고, 나머지 경로는 OSRM 공개 서버에 묻습니다. 실제로는 Pleos NaviHelper와 모바일 지도 SDK를 씁니다.
+- 지도 위 차는 경로를 따라 움직이는 가짜 차입니다. 실제로는 FusedLocation 위치를 씁니다.
+- 좌석 감지와 설정 적용은 화면에 표시만 합니다. 실제로는 Vehicle SDK가 합니다.
+- 본인과 나이 확인, 앱 통화, 푸시 알림은 모양만 있고 진짜로 인증하거나 연결하지 않습니다.
 
-## 파일 구조
+## 폴더
 
 ```
-├─ carpoom.html        모바일 앱 화면
-├─ pleos.html          Pleos 차량 앱 화면(1600×900 설계, 창 크기에 맞춰 확대와 축소)
-├─ stage.html          시연 무대(휴대폰 2대와 Pleos, iframe 연동)
-├─ carpoom-core.js     도메인 코어: 권한, 설정, 예약 상태, 희망 시간, 픽업 순서, 좌석 배정, 탑승 확인, QR, 동기화
-├─ carpoom-geo.js      지도 계산: 시나리오 장소와 경로, 턴 안내, 지오펜스, 거리
-├─ carpoom-sync.js     화면 간 동기화(상태 버전 + 실시간 차량 위치)
-├─ carpoom-brand.js    엠블럼(세 화면 공용)
-├─ build.js            단일 파일 빌드 → dist/
-├─ dist/               빌드 결과(바로 실행용)
-├─ assets/             서체, 3D 아이콘, Pleos 차량 이미지, three.js, MapLibre, LICENSES.txt
-├─ tools/              아이콘 만들기 도구
-└─ test/               core, ui, pleos 테스트, 영상 녹화, 브라우저 찾기
+├─ carpoom.html        휴대폰 앱
+├─ pleos.html          차량 화면(1600×900으로 그리고 창 크기에 맞춰 늘이고 줄임)
+├─ stage.html          시연 페이지(휴대폰 두 대와 차량 화면을 iframe으로 연결)
+├─ carpoom-core.js     권한, 설정, 예약 상태, 희망 시간, 픽업 순서, 좌석 배정, 탑승 확인, QR
+├─ carpoom-geo.js      지도 계산(시나리오 장소와 경로, 회전 안내, 거리)
+├─ carpoom-sync.js     화면끼리 상태와 차 위치 주고받기
+├─ carpoom-brand.js    엠블럼(세 화면이 같이 씀)
+├─ build.js            한 파일로 묶어 dist/에 저장
+├─ dist/               묶은 결과(바로 실행용)
+├─ docs/images/        이 문서에 쓴 이미지
+├─ assets/             서체, 아이콘, 차량 이미지, three.js, MapLibre, LICENSES.txt
+├─ tools/              아이콘 만드는 스크립트
+└─ test/               테스트와 영상 녹화 스크립트
 ```
 
-## 사용한 외부 자료
+## 가져다 쓴 것
 
 출처와 라이선스 전문은 [`assets/LICENSES.txt`](assets/LICENSES.txt)에 있습니다.
 
-| 자료                                     | 용도                                       | 라이선스                         |
-| ---------------------------------------- | ------------------------------------------ | -------------------------------- |
-| Asta Sans (Google Fonts)                 | Pleos Connect 시스템 서체                  | SIL OFL 1.1                      |
-| Pretendard 1.3.9                         | 오프라인 대체 서체(글자 수를 줄인 사본)    | SIL OFL 1.1                      |
-| MapLibre GL JS 5.6.0                     | 지도 렌더링(한글 도로명 세로쓰기 한 줄 끔) | BSD-3-Clause                     |
-| OpenFreeMap, OpenMapTiles, OpenStreetMap | 지도 타일과 데이터(지도에 출처 표기)       | ODbL 1.0                         |
-| OSRM 공개 서버                           | 시나리오 경로와 실시간 경로                | 데이터 © OSM contributors       |
-| three.js r128                            | 모바일 3D 좌석                             | MIT                              |
-| Microsoft Fluent Emoji 3D                | 모바일 앱 3D 아이콘(블루 톤으로 다시 칠함) | MIT                              |
-| Pleos 디자인 가이드 차량 이미지          | Pleos 앱 차량 화면(`assets/pleos/`)        | 현대자동차그룹, 공모전 시연 목적 |
+- Asta Sans: Pleos Connect 기본 서체. SIL OFL 1.1
+- Pretendard 1.3.9: 인터넷이 없을 때 쓰는 서체(필요한 글자만 남긴 사본). SIL OFL 1.1
+- MapLibre GL JS 5.6.0: 지도 그리기. BSD-3-Clause. 한글 도로명이 세로로 눕지 않게 한 줄을 고쳤습니다.
+- OpenFreeMap, OpenMapTiles, OpenStreetMap: 지도 타일과 데이터. ODbL 1.0
+- OSRM 공개 서버: 경로 계산. 데이터 © OpenStreetMap contributors
+- three.js r128: 휴대폰 앱의 3D 좌석. MIT
+- Microsoft Fluent Emoji 3D: 휴대폰 앱 아이콘(블루 톤으로 다시 칠함). MIT
+- Pleos 디자인 가이드 차량 이미지: 차량 화면의 차 그림. 현대자동차그룹 자료이며 공모전 시연에만 씁니다.
