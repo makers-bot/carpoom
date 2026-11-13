@@ -2,7 +2,7 @@
   "name": "carpoom",
   "version": "1.0.0",
   "private": true,
-  "description": "카품(Car Poom): 가족 픽업 예약과 좌석별 맞춤 설정을 잇는 모바일 앱과 Pleos Connect 차량 앱 프로토타입",
+  "description": "카품(Car Poom): 동승자의 탑승 예약과 개인별 차량 설정을 연결하는 모바일 앱과 Pleos Connect 차량 앱",
   "scripts": {
     "build": "node build.js",
     "pretest": "node build.js",
