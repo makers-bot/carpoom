@@ -4,3 +4,5 @@ dist/
 demo/
 test/shots/
 node_modules/
+android/
+apk/

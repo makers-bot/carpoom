@@ -12,6 +12,7 @@
     "test:pleos": "node test/pleos.test.js",
     "video": "node build.js && node test/stage-video.js",
     "icons": "node tools/fetch-fluent-icons.js && node tools/render-icons.js",
+    "icons:android": "node tools/render-android-icon.js",
     "format": "prettier --write ."
   },
   "devDependencies": {

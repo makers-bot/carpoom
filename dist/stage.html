@@ -206,8 +206,11 @@
     const stage = document.getElementById('stage');
     const frames = () => [...document.querySelectorAll('iframe')];
     function fit() {
-      const s = Math.min(innerWidth / 1920, innerHeight / 1080);
-      stage.style.transform = `translate(${(innerWidth - 1920 * s) / 2}px,${(innerHeight - 1080 * s) / 2}px) scale(${s})`;
+      // innerWidth는 휴대폰에서 화면보다 넓은 내용이 있으면 커지므로, 실제로 보이는 크기(clientWidth)를 쓴다
+      const vw = document.documentElement.clientWidth || innerWidth;
+      const vh = document.documentElement.clientHeight || innerHeight;
+      const s = Math.min(vw / 1920, vh / 1080);
+      stage.style.transform = `translate(${(vw - 1920 * s) / 2}px,${(vh - 1080 * s) / 2}px) scale(${s})`;
     }
     addEventListener('resize', fit);
     fit();

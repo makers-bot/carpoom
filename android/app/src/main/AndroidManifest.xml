@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 지도 타일과 Asta Sans 서체를 불러온다 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- 앱 하나에 실행 아이콘 두 개: 동승자용 모바일 앱과 운전자용 Pleos 차량 앱.
+         두 화면은 같은 앱 저장 공간을 써서 한 기기에서도 요청과 수락이 서로 이어진다. -->
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher">
+
+        <activity
+            android:name=".MobileActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|density"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher"
+            android:screenOrientation="sensorPortrait"
+            android:taskAffinity="com.tikitacar.carpoom.mobile"
+            android:theme="@style/MobileTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".CarActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_car"
+            android:label="@string/car_app_name"
+            android:roundIcon="@mipmap/ic_launcher_car"
+            android:screenOrientation="sensorLandscape"
+            android:taskAffinity="com.tikitacar.carpoom.car"
+            android:theme="@style/CarTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

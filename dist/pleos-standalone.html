@@ -155,6 +155,12 @@
     font-weight: 500;
     font-size: 15px;
   }
+  /* 가로로 긴 엠블럼(150×100)을 정사각형 칸의 가운데에 둔다 */
+  .statusbar .veh > span > svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
   .statusbar .clock {
     margin-left: auto;
     margin-right: auto;
@@ -4965,8 +4971,11 @@ ${sel} .hh{transform:translateY(46px);opacity:0;animation:cpRise .8s cubic-bezie
 
     /* ===================== 화면 맞춤, 시작 ===================== */
     function fit() {
-      const s = Math.min(innerWidth / 1600, innerHeight / 900);
-      display.style.transform = `translate(${(innerWidth - 1600 * s) / 2}px,${(innerHeight - 900 * s) / 2}px) scale(${s})`;
+      // innerWidth는 휴대폰에서 화면보다 넓은 내용이 있으면 커지므로, 실제로 보이는 크기(clientWidth)를 쓴다
+      const vw = document.documentElement.clientWidth || innerWidth;
+      const vh = document.documentElement.clientHeight || innerHeight;
+      const s = Math.min(vw / 1600, vh / 900);
+      display.style.transform = `translate(${(vw - 1600 * s) / 2}px,${(vh - 900 * s) / 2}px) scale(${s})`;
       display.style.borderRadius = s < 1 && QS.has('embed') ? '0' : '22px';
     }
     addEventListener('resize', fit);

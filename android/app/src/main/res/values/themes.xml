@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="car_background">#17181B</color>
+    <color name="mobile_background">#FFFFFF</color>
+    <color name="icon_background">#07346B</color>
+    <color name="icon_background_car">#17181B</color>
+
+    <!-- 차량 앱: 항상 어두운 화면에서 시작 -->
+    <style name="CarTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/car_background</item>
+        <item name="android:statusBarColor">@color/car_background</item>
+        <item name="android:navigationBarColor">@color/car_background</item>
+    </style>
+
+    <!-- 모바일 앱: 휴대폰이 밝게 설정이면 밝은 화면(어둡게 설정은 values-night) -->
+    <style name="MobileTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/mobile_background</item>
+        <item name="android:statusBarColor">@color/mobile_background</item>
+        <item name="android:navigationBarColor">@color/mobile_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+</resources>

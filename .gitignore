@@ -6,6 +6,15 @@ test/shots/
 demo/
 *.mp4
 
+# 안드로이드 빌드 산출물과 PC별 설정, 서명 키(키와 비밀번호는 절대 올리지 않는다)
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/keystore.properties
+*.jks
+*.keystore
+
 # 운영체제, 동기화 도구가 만드는 파일
 desktop.ini
 Thumbs.db
